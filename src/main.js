@@ -82,6 +82,7 @@ load();
 /* ?tab=spese&theme=light per aprire direttamente una scheda (utile per i test) */
 const Q = new URLSearchParams(location.search);
 if (Q.get('theme') === 'light' || Q.get('theme') === 'dark') S.theme = Q.get('theme');
+if (Q.has('step') && STEPS[+Q.get('step')]) S.i = +Q.get('step');
 applyTheme(); syncSwitches();
 show(TABS.some(t => t.id === Q.get('tab')) || Q.get('tab') === 'settings' ? Q.get('tab') : 'oggi');
 armAutoplay(); notifInit();

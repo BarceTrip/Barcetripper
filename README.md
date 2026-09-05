@@ -41,6 +41,7 @@ src/audio/sfx.js      effetti sonori
 src/audio/music.js    rumba catalana generativa
 src/notify.js         avvisi 30 minuti prima + export ICS
 src/radar.js          confronto posizione GPS / posizione prevista
+src/weather.js        meteo per tappa (Open-Meteo) e icone meteo vettoriali
 scripts/icons.py      genera le icone PNG
 ```
 
@@ -51,6 +52,10 @@ Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cron
 ## Interfaccia
 
 Cinque schede in basso: Oggi, Percorso, Spese, Radar, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese`, e `&theme=light` per forzare il tema (comodo per i test).
+
+## Meteo
+
+Nella tessera Oggi compare la previsione per il luogo e l'ora della tappa: icona, condizione, temperatura a quell'ora, massima e minima del giorno. Per i giorni liberi una colonna per giorno. Fonte Open-Meteo, che combina i modelli dei servizi meteo nazionali (ECMWF, DWD ICON, Météo-France AROME); orizzonte 16 giorni, una sola richiesta per tutte le località, cache locale di un'ora che vale anche offline. Il luogo usato è quello di arrivo della tappa, o dove si sta fermi.
 
 ## Note su iPhone
 

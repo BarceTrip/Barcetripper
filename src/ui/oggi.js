@@ -4,6 +4,7 @@ import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
+import { weatherFor, WX_ICONS, deg } from '../weather.js';
 
 export const codeTag = s => s.code ? '<span class="code">' + s.code + '</span>' : '';
 const ON = { air: '#26333A' };  // colore testo sulla tessera gialla
@@ -53,8 +54,8 @@ export function drawOggi(animate) {
 
   const hero = '<div class="hero" style="--mode:var(--' + s.mode + ');--on:' + (ON[s.mode] || '#fff') + '"><div class="mark">' + ICONS[s.mode] + '</div>' +
     '<div class="hero-top">' + ICONS[s.mode] + '<span class="day">' + s.day + '</span><span class="cd" id="cd"></span></div>' +
-    '<div class="time tnum' + (animate ? ' flip' : '') + '">' + s.time + '</div><h2 class="title">' + s.title + codeTag(s) + '</h2>' +
-    '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + chips + acts + '</div>';
+    '<div class="time tnum' + (animate ? ' flip' : '') + '">' + (s.at ? s.time : '') + '</div><h2 class="title">' + s.title + codeTag(s) + '</h2>' +
+    '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + '<div class="wx" id="wx" hidden></div>' + chips + acts + '</div>';
 
   const nav = '<div class="nav2"><button class="btn ghost" id="bBack"' + (S.i === 0 ? ' disabled' : '') + '>' + ICONS.chevL + 'Indietro</button>' +
     '<button class="btn pri" id="bNext"' + (last ? ' disabled' : '') + '>' + (last ? 'Viaggio finito' : 'Fatto, avanti') + (last ? '' : ICONS.chevR) + '</button></div>';
@@ -72,7 +73,7 @@ export function drawOggi(animate) {
   const planb = s.planB ? '<div class="sec"><div class="sh"><span class="eyebrow">Se va storto</span></div><div class="planb"><div class="mi">' + ICONS.compass + '</div><p>' + s.planB + '</p></div></div>' : '';
 
   $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + hero + nav + ready + notes + planb;
-  updCd();
+  updCd(); loadWx(s);
 
   $('#bBack').onclick = () => emit('advance', -1);
   $('#bNext').onclick = () => emit('advance', 1);
@@ -82,4 +83,19 @@ export function drawOggi(animate) {
     sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(false);
   });
   $$('#pOggi .chip.copy').forEach(f => f.onclick = () => copyTxt(f.dataset.v));
+}
+
+/* meteo nel luogo e all'ora della tappa */
+function loadWx(s) {
+  const k = S.i;
+  weatherFor(s).then(w => {
+    const el = $('#wx'); if (!el || S.i !== k || !w) return;
+    const tt = (x, when) => '<span class="wxt">' + (when ? '<small>' + when + '</small>' : '') + '<b>' + deg(x.tmax) + '</b><i>' + deg(x.tmin) + '</i></span>';
+    if (w.days) {
+      el.innerHTML = '<div class="wxd">' + w.days.map((x, j) => x ? '<div class="wxc">' + WX_ICONS[x.ico] + tt(x, ['Mer 16', 'Gio 17', 'Ven 18'][j]) + '<em>' + x.label + '</em></div>' : '').join('') + '</div><span class="src">Open-Meteo</span>';
+    } else {
+      el.innerHTML = WX_ICONS[w.ico] + '<div class="wxb"><b>' + w.label + (w.pop >= 30 ? ' · ' + w.pop + '% pioggia' : '') + '</b><span>' + (w.temp != null ? deg(w.temp) + ' alle ' + s.time + ' · ' : '') + 'max ' + deg(w.tmax) + ' · min ' + deg(w.tmin) + '</span></div><span class="src">Open-Meteo</span>';
+    }
+    el.hidden = false;
+  }).catch(() => {});
 }
