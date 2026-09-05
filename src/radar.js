@@ -1,9 +1,10 @@
 /* Radar: confronta la posizione GPS con quella prevista dall'itinerario in questo istante. */
 import { STEPS } from './data/steps.js';
 import { P } from './data/places.js';
-import { $ } from './ui/dom.js';
+import { $, toast, header } from './ui/dom.js';
+import { ICONS } from './icons.js';
 import { sfx } from './audio/sfx.js';
-import { toast } from './ui/dom.js';
+import { S } from './state.js';
 
 const TOL = { stay: .8, road: 2, rail: 8, air: 30 };   // km
 const GOPT = { enableHighAccuracy: true, timeout: 15000, maximumAge: 20000 };
@@ -33,53 +34,52 @@ export function expectedAt(T) {
 }
 
 const fmtKm = d => d < 1 ? Math.round(d * 1000) + '<small>m</small>' : (d < 10 ? d.toFixed(1) : Math.round(d)).toString().replace('.', ',') + '<small>km</small>';
+const LAB = { ok: 'In posizione', warn: 'Vicino', bad: 'Fuori rotta' };
 
-function radarEval() {
+function state() {
   const e = expectedAt(Date.now()); let d = null, st = 'info';
   if (RAD.pos) { d = hav(RAD.pos, e.pos); if (e.tol != null) st = d <= e.tol ? 'ok' : d <= e.tol * 4 ? 'warn' : 'bad'; }
-  $('#bRadar').className = 'g radar ' + (RAD.pos ? st : 'idle');
-  const bd = $('#rBadge');
-  if (RAD.pos) { bd.innerHTML = fmtKm(d).replace('<small>', ' ').replace('</small>', ''); bd.classList.add('on'); } else bd.classList.remove('on');
-  if (RAD.open) radarDraw(e, d, st);
+  return { e, d, st };
 }
-function radarDraw(e, d, st) {
-  const lab = { ok: 'In posizione', warn: 'Vicino', bad: 'Fuori rotta', info: e.phase === 'free' ? 'Libero' : e.phase === 'pre' ? 'Prima del viaggio' : 'Info' }[st];
+export function drawRadar() {
+  const { e, d, st } = state();
+  const lab = LAB[st] || (e.phase === 'free' ? 'Giornata libera' : e.phase === 'pre' ? 'Prima del viaggio' : e.phase === 'post' ? 'Viaggio concluso' : 'Posizione');
   const gm = 'https://www.google.com/maps/dir/?api=1&destination=' + e.pos[0].toFixed(5) + ',' + e.pos[1].toFixed(5) + '&travelmode=' + (e.phase === 'transit' ? 'transit' : 'walking');
-  const when = RAD.ts ? new Date(RAD.ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const when = RAD.ts ? new Date(RAD.ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : null;
   let body;
-  if (RAD.err) body = '<div class="rp-msg">' + RAD.err + '</div>';
-  else if (!RAD.pos) body = '<div class="rp-msg">Cerco la tua posizione…</div>';
-  else body = '<div class="rp-num">' + fmtKm(d) + '</div><div class="rp-lab">dal punto previsto: ' + e.label + '</div><div class="rp-sub">' + e.sub + '</div>' +
-    '<div class="rp-meta"><span>Precisione ±' + Math.round(RAD.acc) + ' m</span><span>Aggiornato ' + when + '</span>' + (e.tol != null ? '<span>Tolleranza ' + (e.tol < 1 ? Math.round(e.tol * 1000) + ' m' : e.tol + ' km') + '</span>' : '') + (RAD.watch ? '<span>Monitoraggio attivo</span>' : '') + '</div>';
-  $('#rPanel').innerHTML = '<div class="rp-h"><b>Radar</b><span class="rp-st ' + st + '"><i></i>' + lab + '</span></div>' + body +
-    '<div class="rp-acts"><button class="g pill" id="rRefresh">Aggiorna</button><a class="g pill" href="' + gm + '" target="_blank" rel="noopener">Portami lì</a><button class="g pill' + (RAD.watch ? ' tint' : '') + '" id="rWatch">' + (RAD.watch ? 'Ferma' : 'Monitora') + '</button></div>';
+  if (RAD.err) body = '<div class="rmsg">' + RAD.err + '</div>';
+  else if (!RAD.pos) body = '<div class="rmsg">Cerco la tua posizione…</div>';
+  else body = '<div class="rnum tnum">' + fmtKm(d) + '</div><div class="rlab">dal punto previsto</div>' +
+    '<div class="chips rmeta"><span class="chip">±' + Math.round(RAD.acc) + ' m</span>' + (when ? '<span class="chip">Aggiornato <b>' + when + '</b></span>' : '') +
+    (e.tol != null ? '<span class="chip">Tolleranza <b>' + (e.tol < 1 ? Math.round(e.tol * 1000) + ' m' : e.tol + ' km') + '</b></span>' : '') + (RAD.watch ? '<span class="chip">Monitoraggio attivo</span>' : '') + '</div>';
+
+  $('#pRadar').innerHTML = header('Dove dovresti essere', 'Radar', { gear: true }) +
+    '<div class="card"><div class="rstat"><span class="dotc ' + (RAD.pos ? st : 'idle') + '">' + ICONS.radar + '</span><div><b>' + lab + '</b><span>' + e.label + '</span></div></div>' + body +
+    '<div class="racts"><button class="btn ghost" id="rRefresh">Aggiorna</button><button class="btn ' + (RAD.watch ? 'pri' : 'ghost') + '" id="rWatch">' + (RAD.watch ? 'Ferma' : 'Monitora') + '</button></div></div>' +
+    '<div class="sec"><div class="sh"><span class="eyebrow">Punto previsto adesso</span></div><div class="card"><div class="rstat"><span class="dotc info">' + ICONS.nav + '</span><div><b>' + e.label + '</b><span>' + e.sub + '</span></div></div>' +
+    '<div class="racts"><a class="btn tealb" href="' + gm + '" target="_blank" rel="noopener">' + ICONS.nav + 'Portami lì</a></div></div></div>' +
+    '<div class="sec"><div class="note">Il radar confronta il GPS del telefono con il punto in cui l\'itinerario prevede che tu sia in questo momento. Durante i giorni liberi misura solo la distanza dall\'hotel.</div></div>';
   $('#rRefresh').onclick = () => { sfx('tick'); radarFix(); };
   $('#rWatch').onclick = () => { sfx('tick'); RAD.watch ? radarStop() : radarWatch(); };
 }
-function radarOk(p) { RAD.pos = [p.coords.latitude, p.coords.longitude]; RAD.acc = p.coords.accuracy; RAD.ts = p.timestamp; RAD.err = null; radarEval(); }
+const redraw = () => { if (S.tab === 'radar') drawRadar(); };
+function radarOk(p) { RAD.pos = [p.coords.latitude, p.coords.longitude]; RAD.acc = p.coords.accuracy; RAD.ts = p.timestamp; RAD.err = null; redraw(); }
 function radarErr(x) {
   RAD.err = x.code === 1 ? 'Accesso alla posizione negato. Abilitalo nelle impostazioni del telefono per questa app.' : x.code === 2 ? 'Posizione non disponibile in questo momento.' : 'Timeout: riprova tra qualche secondo.';
-  radarEval();
+  redraw();
 }
 function radarFix() {
-  if (!navigator.geolocation) { RAD.err = 'Geolocalizzazione non supportata.'; radarEval(); return; }
-  RAD.err = null; radarEval(); navigator.geolocation.getCurrentPosition(radarOk, radarErr, GOPT);
+  if (!navigator.geolocation) { RAD.err = 'Geolocalizzazione non supportata.'; redraw(); return; }
+  RAD.err = null; redraw(); navigator.geolocation.getCurrentPosition(radarOk, radarErr, GOPT);
 }
 function radarWatch() {
   if (!navigator.geolocation) return;
-  RAD.watch = navigator.geolocation.watchPosition(radarOk, radarErr, GOPT); RAD.timer = setInterval(radarEval, 30000); radarEval(); toast('Radar in monitoraggio');
+  RAD.watch = navigator.geolocation.watchPosition(radarOk, radarErr, GOPT); RAD.timer = setInterval(redraw, 30000); redraw(); toast('Radar in monitoraggio');
 }
 function radarStop() {
   if (RAD.watch != null) navigator.geolocation.clearWatch(RAD.watch);
-  RAD.watch = null; clearInterval(RAD.timer); RAD.timer = null; radarEval();
+  RAD.watch = null; clearInterval(RAD.timer); RAD.timer = null; redraw();
 }
-export function radarToggle() {
-  RAD.open = !RAD.open; $('#rPanel').classList.toggle('on', RAD.open); $('#scrim').classList.toggle('on', RAD.open);
-  if (RAD.open) { sfx('tick'); if (!RAD.pos) radarFix(); else radarEval(); }
-}
-export function radarClose() { if (RAD.open) { RAD.open = false; $('#rPanel').classList.remove('on'); } }
-export function radarInit() {
-  $('#bRadar').onclick = radarToggle;
-  $('#scrim').addEventListener('click', radarClose);
-  setInterval(() => { if (RAD.pos) radarEval(); }, 60000);
-}
+/* chiamata quando si apre la scheda Radar */
+export function radarShow() { if (!RAD.pos && !RAD.err) radarFix(); else drawRadar(); }
+setInterval(() => { if (RAD.pos) redraw(); }, 60000);

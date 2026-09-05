@@ -23,20 +23,20 @@ Dopo la pubblicazione, su iPhone: Safari, Condividi, "Aggiungi alla schermata Ho
 ## Struttura
 
 ```
-index.html            markup della shell (header, viste, dock, fogli)
-src/main.js           avvio, render, navigazione fra tappe, eventi
-src/styles.css        tutto lo stile
+index.html            shell: sei pagine vuote e la tab bar
+src/main.js           avvio, schede, navigazione fra tappe, impostazioni
+src/styles.css        tutto lo stile (tema ispirato a Bring!)
 src/state.js          stato condiviso + salvataggio in localStorage
 src/data/steps.js     LE TAPPE: qui si aggiunge o modifica il viaggio
 src/data/places.js    hotel, coordinate, prefisso Google Maps
 src/icons.js          icone SVG inline
-src/ui/step.js        vista Tappa (hero, checklist, note, piano B)
-src/ui/map.js         vista Mappa (timeline con l'omino)
-src/ui/spese.js       vista Spese
-src/ui/sos.js         schermata Emergenza
-src/ui/sheet.js       foglio Impostazioni e tema
+src/ui/oggi.js        pagina Oggi (tessera tappa, checklist a tessere, note, piano B)
+src/ui/percorso.js    pagina Percorso (tappe per giorno)
+src/ui/spese.js       pagina Spese
+src/ui/sos.js         pagina Emergenza
+src/ui/settings.js    pagina Impostazioni e tema
 src/ui/confetti.js    coriandoli a fine viaggio
-src/ui/dom.js         helper: $, toast, bus eventi
+src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
 src/audio/sfx.js      effetti sonori
 src/audio/music.js    rumba catalana generativa
 src/notify.js         avvisi 30 minuti prima + export ICS
@@ -47,6 +47,10 @@ scripts/icons.py      genera le icone PNG
 ## Aggiungere una tappa
 
 Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cronologico. Il campo `geo` dice al radar dove dovresti essere: `{p: P.LUOGO}` se sei fermo, `{from, to, arr, dest}` se ti stai spostando. Le coordinate nuove vanno in `places.js`.
+
+## Interfaccia
+
+Cinque schede in basso: Oggi, Percorso, Spese, Radar, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese`, e `&theme=light` per forzare il tema (comodo per i test).
 
 ## Note su iPhone
 
