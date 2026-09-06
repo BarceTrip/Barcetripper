@@ -67,7 +67,7 @@ Mappa 3D interattiva con l'hotel al centro: MapLibre GL con le mappe vettoriali 
 
 ## Documenti
 
-Biglietti, carte d'imbarco, verbali: si aggiungono dal telefono (PDF o immagini) e restano in IndexedDB sul dispositivo, senza passare da nessun server. Si aprono a tutto schermo anche senza rete e si possono condividere con il foglio di condivisione. Nessun documento personale va messo nel progetto: l'app è pubblicata, tutto ciò che sta in `dist/` è scaricabile da chiunque. Su iPhone i dati restano finché l'app è sulla schermata Home. La pagina si apre dalle impostazioni e dal tasto "Documenti" nelle tappe che lo prevedono (`docs: true`).
+Biglietti, carte d'imbarco, verbali: si aggiungono dal telefono (PDF o immagini) e restano in IndexedDB sul dispositivo, senza passare da nessun server. I PDF vengono convertiti in immagini delle pagine con PDF.js al momento dell'aggiunta (caricato solo allora), perché su iPhone un PDF incorporato non si adatta allo schermo; il visualizzatore mostra le pagine a tutto schermo, con zoom a pulsanti e doppio tocco, anche senza rete, e il file originale si può condividere con il foglio di condivisione. Nessun documento personale va messo nel progetto: l'app è pubblicata, tutto ciò che sta in `dist/` è scaricabile da chiunque. Su iPhone i dati restano finché l'app è sulla schermata Home. La pagina si apre dalle impostazioni e dal tasto "Documenti" nelle tappe che lo prevedono (`docs: true`).
 
 ## Meteo
 
