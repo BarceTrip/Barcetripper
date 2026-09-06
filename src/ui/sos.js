@@ -22,8 +22,8 @@ export function drawSos() {
     '<div class="calls">' +
     call('112', '112', 'Polizia, ambulanza, vigili del fuoco. Vale in Spagna e in Italia', 1) +
     call('088', '088', "Mossos d'Esquadra, polizia catalana") +
-    call('+34930338000', 'Consolato', "Italia a Barcellona, Carrer d'Aribau 185") +
-    call('+34659790266', 'Reperibilità', 'Consolare, solo emergenze gravi fuori orario') +
+    call('+34930338000', 'Consolato', "Carrer d'Aribau 185 · risponde lun, mer, gio, ven 15-16 e mar 11-12") +
+    call('+34659790266', 'Reperibilità', 'Funzionario di turno del Consolato: feriali 18-22, weekend 9-22. Solo emergenze gravi') +
     call(h.tel, 'Hotel', h.name) + '</div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Dove alloggi adesso</span></div><div class="card hot"><b>' + h.name + '</b><div class="ad">' + h.addr + '</div><div class="hr">' +
     '<button class="btn tealb" id="bShowAddr">' + ICONS.big + 'Mostra al tassista</button></div></div></div>' +
