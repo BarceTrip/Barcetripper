@@ -18,7 +18,7 @@ import { drawValigia } from './ui/valigia.js';
 
 /* ---- schede ---- */
 const TABS = [
-  { id: 'oggi', lbl: 'Oggi', ico: ICONS.today, page: 'pOggi', draw: () => drawOggi(false) },
+  { id: 'oggi', lbl: 'Oggi', ico: ICONS.today, page: 'pOggi', draw: () => drawOggi(0) },
   { id: 'percorso', lbl: 'Percorso', ico: ICONS.route, page: 'pPercorso', draw: () => { drawPercorso(); scrollPercorsoToNow(); } },
   { id: 'spese', lbl: 'Spese', ico: ICONS.wallet, page: 'pSpese', draw: drawSpese },
   { id: 'radar', lbl: 'Radar', ico: ICONS.radar, page: 'pRadar', draw: radarShow },
@@ -47,8 +47,9 @@ $$('#tabs button').forEach(b => b.onclick = () => { if (S.tab !== b.dataset.t) {
 document.addEventListener('click', e => { if (e.target.closest('.gear')) { sfx('tick'); show('settings'); } });
 
 /* ---- navigazione tappe ---- */
-function goto(k, animate) {
-  S.i = k; save(); drawOggi(animate);
+/* dir: 1 la tessera entra da destra, -1 da sinistra, 0 senza animazione */
+function goto(k, dir) {
+  S.i = k; save(); drawOggi(dir);
   if (S.tab !== 'oggi') show('oggi', { noDraw: true }); else window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function advance(d) {
@@ -56,26 +57,35 @@ function advance(d) {
   const last = n === STEPS.length - 1;
   if (d > 0) { const m = STEPS[n].mode; sfx(last ? 'done' : (m === 'road' ? 'tick' : m)); if (last) confetti(); } else sfx('back');
   if (navigator.vibrate) navigator.vibrate(8);
-  goto(n, true);
+  goto(n, d);
 }
-on('goto', k => goto(k, true));
+on('goto', k => goto(k, k > S.i ? 1 : k < S.i ? -1 : 0));
 on('advance', d => advance(d));
 on('open', t => show(t === 'back' ? bagFrom : t));   // la Valigia si apre da Oggi o dalle impostazioni e torna da dove è venuta
 
 /* swipe fra le tappe nella pagina Oggi */
-let tx = 0, ty = 0; const po = $('#pOggi');
-po.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
-po.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
-  if (Math.abs(dx) > 70 && Math.abs(dy) < 50) advance(dx < 0 ? 1 : -1);
+let tx = 0, ty = 0, drag = false; const po = $('#pOggi');
+po.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; drag = false; }, { passive: true });
+po.addEventListener('touchmove', e => {
+  const dx = e.touches[0].clientX - tx, dy = e.touches[0].clientY - ty, sv = $('#sv'); if (!sv) return;
+  if (!drag && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) drag = true;
+  if (drag) { sv.classList.add('drag'); sv.style.transform = 'translateX(' + dx * .35 + 'px)'; }
 }, { passive: true });
+po.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty, sv = $('#sv');
+  if (sv) { sv.style.transform = ''; sv.classList.remove('drag'); }
+  if (drag && Math.abs(dx) > 70 && Math.abs(dy) < 60) advance(dx < 0 ? 1 : -1);
+}, { passive: true });
+/* niente zoom: doppio tocco (touch-action nel CSS) e pinch */
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 
 /* ---- impostazioni ---- */
 drawSettings();
 $('#bSetBack').onclick = () => { sfx('back'); show(prevTab); };
 $('#sNow').onclick = () => {
   const k = nowIndex(); sfx('tick');
-  if (k < 0) { toast('Il viaggio non è ancora iniziato'); goto(0, true); } else goto(k, true);
+  if (k < 0) { toast('Il viaggio non è ancora iniziato'); goto(0, -1); } else goto(k, k >= S.i ? 1 : -1);
 };
 $('#sBag').onclick = () => { sfx('tick'); show('valigia'); };
 $('#sNotif').onclick = notifAsk;

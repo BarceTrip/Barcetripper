@@ -75,11 +75,28 @@ export function musicStop() {
   if (!MUS.on) return; const c = actx(); MUS.on = false; clearInterval(MUS.timer);
   MUS.master.gain.setTargetAtTime(0, c.currentTime, .4);
 }
-/* iOS non fa partire l'audio senza un gesto: parte al primo tocco. */
-let armed = false;
+/* iOS non fa partire l'audio senza un gesto, e conta solo touchend/click (touchstart no).
+   In più WebAudio da solo segue l'interruttore silenzioso: un <audio> muto in riproduzione
+   sposta la sessione audio su "playback" e la musica si sente comunque. */
+let armed = false, silent = null;
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+function unlockSession() {
+  if (!silent) { silent = new Audio(SILENT); silent.loop = true; silent.volume = 0.01; silent.setAttribute('playsinline', ''); }
+  try { const p = silent.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
 export function armAutoplay() {
   if (armed) return; armed = true;
-  const evs = ['pointerdown', 'touchstart', 'keydown'];
-  const go = () => { if (S.music && !MUS.on) { try { musicStart(); } catch (e) {} } evs.forEach(ev => document.removeEventListener(ev, go, true)); };
+  const evs = ['touchend', 'pointerup', 'click', 'keydown'];
+  const go = () => {
+    if (!S.music || MUS.on) { evs.forEach(ev => document.removeEventListener(ev, go, true)); return; }
+    unlockSession();
+    try {
+      const c = actx();
+      const start = () => { if (S.music && !MUS.on) musicStart(); };
+      if (c.state === 'running') start(); else c.resume().then(start).catch(() => {});
+    } catch (e) {}
+    /* se il contesto non è ancora partito resta in ascolto del prossimo tocco */
+    if (getCtx() && getCtx().state === 'running') evs.forEach(ev => document.removeEventListener(ev, go, true));
+  };
   evs.forEach(ev => document.addEventListener(ev, go, true));
 }

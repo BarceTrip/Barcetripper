@@ -39,7 +39,8 @@ setInterval(updCd, 30000);
 const route = () => '<div class="route">' + STEPS.map((s, k) => '<i style="--c:var(--' + s.mode + ')" class="' + (k < S.i ? 'done' : k === S.i ? 'now' : '') + '"></i>').join('') + '</div>';
 const tile = (txt, k, ok) => '<button class="tile' + (ok ? ' ok' : '') + '" data-k="' + k + '"><span class="ti">' + ICONS.check + '</span><span class="tt">' + txt + '</span></button>';
 
-export function drawOggi(animate) {
+/* dir: 1 avanti, -1 indietro, 0 nessuna animazione */
+export function drawOggi(dir) {
   const s = STEPS[S.i], last = S.i === STEPS.length - 1;
   const ni = nowIndex();
   const nowBtn = ni >= 0 && ni !== S.i ? '<button class="nowchip" id="bNow">' + ICONS.clock + 'Adesso</button>' : '';
@@ -55,8 +56,8 @@ export function drawOggi(animate) {
 
   const hero = '<div class="hero" style="--mode:var(--' + s.mode + ');--on:' + (ON[s.mode] || '#fff') + '"><div class="mark">' + ICONS[s.mode] + '</div>' +
     '<div class="hero-top">' + ICONS[s.mode] + '<span class="day">' + s.day + '</span><span class="cd" id="cd"></span></div>' +
-    '<div class="time tnum' + (animate ? ' flip' : '') + '">' + (s.at ? s.time : '') + '</div><h2 class="title">' + s.title + codeTag(s) + '</h2>' +
-    '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + '<div class="wx" id="wx" hidden></div>' + chips + acts + '</div>';
+    '<div class="time tnum">' + (s.at ? s.time : '') + '</div><h2 class="title">' + s.title + codeTag(s) + '</h2>' +
+    '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + '<div class="wx" id="wx"><span class="wxp">Meteo in arrivo…</span></div>' + chips + acts + '</div>';
 
   const nav = '<div class="nav2"><button class="btn ghost" id="bBack"' + (S.i === 0 ? ' disabled' : '') + '>' + ICONS.chevL + 'Indietro</button>' +
     '<button class="btn pri" id="bNext"' + (last ? ' disabled' : '') + '>' + (last ? 'Viaggio finito' : 'Fatto, avanti') + (last ? '' : ICONS.chevR) + '</button></div>';
@@ -74,7 +75,8 @@ export function drawOggi(animate) {
   const planb = s.planB ? '<div class="sec"><div class="sh"><span class="eyebrow">Se va storto</span></div><div class="planb"><div class="mi">' + ICONS.compass + '</div><p>' + s.planB + '</p></div></div>' : '';
 
   /* striscia della valigia: alla partenza (pack "out") e ai check-out (pack "back") */
-  $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + (s.pack ? bagStrip(s.pack) : '') + hero + nav + ready + notes + planb;
+  $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + (s.pack ? bagStrip(s.pack) : '') +
+    '<div class="sv' + (dir > 0 ? ' in-r' : dir < 0 ? ' in-l' : '') + '" id="sv">' + hero + nav + ready + notes + planb + '</div>';
   updCd(); loadWx(s); bagStripBind();
 
   $('#bBack').onclick = () => emit('advance', -1);
@@ -82,7 +84,7 @@ export function drawOggi(animate) {
   const nb = $('#bNow'); if (nb) nb.onclick = () => { sfx('tick'); emit('goto', ni); };
   $$('#pOggi .tile').forEach(b => b.onclick = () => {
     const k = +b.dataset.k; S.checks[S.i] = S.checks[S.i] || []; S.checks[S.i][k] = !S.checks[S.i][k];
-    sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(false);
+    sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(0);
   });
   $$('#pOggi .chip.copy').forEach(f => f.onclick = () => copyTxt(f.dataset.v));
 }
@@ -91,13 +93,13 @@ export function drawOggi(animate) {
 function loadWx(s) {
   const k = S.i;
   weatherFor(s).then(w => {
-    const el = $('#wx'); if (!el || S.i !== k || !w) return;
+    const el = $('#wx'); if (!el || S.i !== k) return;
+    if (!w) { el.innerHTML = '<span class="wxp">Meteo non disponibile</span>'; return; }
     const tt = (x, when) => '<span class="wxt">' + (when ? '<small>' + when + '</small>' : '') + '<b>' + deg(x.tmax) + '</b><i>' + deg(x.tmin) + '</i></span>';
     if (w.days) {
       el.innerHTML = '<div class="wxd">' + w.days.map((x, j) => x ? '<div class="wxc">' + WX_ICONS[x.ico] + tt(x, ['Mer 16', 'Gio 17', 'Ven 18'][j]) + '<em>' + x.label + '</em></div>' : '').join('') + '</div><span class="src">Open-Meteo</span>';
     } else {
       el.innerHTML = WX_ICONS[w.ico] + '<div class="wxb"><b>' + w.label + (w.pop >= 30 ? ' · ' + w.pop + '% pioggia' : '') + '</b><span>' + (w.temp != null ? deg(w.temp) + ' alle ' + s.time + ' · ' : '') + 'max ' + deg(w.tmax) + ' · min ' + deg(w.tmin) + '</span></div><span class="src">Open-Meteo</span>';
     }
-    el.hidden = false;
-  }).catch(() => {});
+  }).catch(() => { const el = $('#wx'); if (el && S.i === k) el.innerHTML = '<span class="wxp">Meteo non disponibile</span>'; });
 }
