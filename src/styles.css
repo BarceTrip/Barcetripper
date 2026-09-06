@@ -203,6 +203,38 @@ svg{display:block}
 .sw.on{background:var(--teal)} .sw.on:after{transform:translateX(20px)}
 .about{font-size:13px;color:var(--ink3);text-align:center;margin-top:18px;font-weight:600}
 
+/* ============ Valigia ============ */
+.bagstrip{display:flex;align-items:center;gap:12px;width:100%;background:var(--lav);color:#fff;border-radius:16px;padding:11px 12px;margin:-4px 0 12px;box-shadow:var(--shadow);transition:transform .12s}
+.bagstrip:active{transform:scale(.985)}
+.bagstrip .bt{flex:1;min-width:0}
+.bagstrip .bt b{display:block;font-size:15.5px;font-weight:800;line-height:1.2}
+.bagstrip .bt span{display:block;font-size:13px;font-weight:600;opacity:.9;margin-top:1px}
+.bagstrip>.ic{opacity:.8}
+.bring{position:relative;display:grid;place-items:center;flex:none}
+.bring>*{grid-area:1/1}
+.bring i{display:grid;place-items:center} .bring i .ic{width:16px;height:16px}
+.bring b{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.ring{display:block}
+.bhero{display:flex;align-items:center;gap:16px;background:var(--lav);color:#fff;border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+.bhero .bh{flex:1;min-width:0}
+.bhero .eyebrow{color:rgba(255,255,255,.85)}
+.bhero .bh b{display:block;font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-top:3px}
+.bhero .bsub{display:block;font-size:14px;font-weight:600;opacity:.92;margin-top:5px}
+.bacts{display:flex;gap:8px;margin-top:8px}
+.bacts .btn{padding:0 16px}
+.seg{flex:1;display:flex;background:var(--card);border-radius:14px;padding:4px;height:48px}
+.seg button{flex:1;border-radius:10px;font-weight:700;font-size:15px;color:var(--ink2);display:grid;place-items:center;text-align:center;transition:background .15s,color .15s}
+.seg button.on{background:var(--lav);color:#fff}
+.bagcard{display:flex;align-items:center;gap:14px;margin-top:10px}
+.bagcard svg{width:88px;height:88px;flex:none;color:var(--ink2)}
+.bagcard b{display:block;font-size:15.5px;font-weight:800;line-height:1.25}
+.bagcard span{display:block;font-size:13.5px;color:var(--ink2);font-weight:600;margin-top:4px;line-height:1.4}
+.tile.rm{background:var(--card2);color:var(--ink);box-shadow:none}
+.tile.rm .ti{border-color:var(--coral);background:var(--coral)} .tile.rm .ti .ic{opacity:1;color:#fff}
+.tile.rm.ok .tt{opacity:.55}
+.chipbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:9px;background:var(--card2);color:var(--ink2);font-weight:700;font-size:13.5px;margin-top:5px;flex:none}
+.chipbtn.on{background:var(--coral);color:#fff}
+
 /* ============ Tab bar ============ */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--tab);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
 .tabbar-in{max-width:560px;margin:0 auto;display:flex}

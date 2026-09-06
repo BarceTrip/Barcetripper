@@ -14,6 +14,7 @@ import { applyTheme, syncSwitches, drawSettings } from './ui/settings.js';
 import { confetti } from './ui/confetti.js';
 import { notifInit, notifAsk, icsExport } from './notify.js';
 import { drawRadar, radarShow } from './radar.js';
+import { drawValigia } from './ui/valigia.js';
 
 /* ---- schede ---- */
 const TABS = [
@@ -23,15 +24,19 @@ const TABS = [
   { id: 'radar', lbl: 'Radar', ico: ICONS.radar, page: 'pRadar', draw: radarShow },
   { id: 'sos', lbl: 'SOS', ico: ICONS.alert, page: 'pSos', draw: drawSos, cls: 'sos' },
 ];
-let prevTab = 'oggi';
+/* pagine senza scheda: si aprono sopra la scheda corrente e con "indietro" tornano lì */
+const SUB = { settings: 'pSettings', valigia: 'pValigia' };
+let prevTab = 'oggi', bagFrom = 'oggi';
 
 function show(t, opts = {}) {
-  if (t !== 'settings') prevTab = t;
+  if (!SUB[t]) prevTab = t;
+  if (t === 'valigia' && S.tab !== 'valigia') bagFrom = TABS.some(x => x.id === S.tab) || S.tab === 'settings' ? S.tab : 'oggi';
   S.tab = t;
   $$('.page').forEach(p => p.classList.remove('on'));
-  $('#' + (t === 'settings' ? 'pSettings' : TABS.find(x => x.id === t).page)).classList.add('on');
+  $('#' + (SUB[t] || TABS.find(x => x.id === t).page)).classList.add('on');
   $$('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
   if (t === 'settings') { syncSwitches(); }
+  else if (t === 'valigia') drawValigia();
   else if (!opts.noDraw) TABS.find(x => x.id === t).draw();
   if (t === 'sos') sfx('sos');
   window.scrollTo({ top: 0, behavior: opts.smooth ? 'smooth' : 'auto' });
@@ -55,6 +60,7 @@ function advance(d) {
 }
 on('goto', k => goto(k, true));
 on('advance', d => advance(d));
+on('open', t => show(t === 'back' ? bagFrom : t));   // la Valigia si apre da Oggi o dalle impostazioni e torna da dove è venuta
 
 /* swipe fra le tappe nella pagina Oggi */
 let tx = 0, ty = 0; const po = $('#pOggi');
@@ -71,6 +77,7 @@ $('#sNow').onclick = () => {
   const k = nowIndex(); sfx('tick');
   if (k < 0) { toast('Il viaggio non è ancora iniziato'); goto(0, true); } else goto(k, true);
 };
+$('#sBag').onclick = () => { sfx('tick'); show('valigia'); };
 $('#sNotif').onclick = notifAsk;
 $('#sIcs').onclick = icsExport;
 $('#sSnd').onclick = () => { S.snd = !S.snd; syncSwitches(); if (S.snd) sfx('tick'); save(); };
@@ -84,6 +91,6 @@ const Q = new URLSearchParams(location.search);
 if (Q.get('theme') === 'light' || Q.get('theme') === 'dark') S.theme = Q.get('theme');
 if (Q.has('step') && STEPS[+Q.get('step')]) S.i = +Q.get('step');
 applyTheme(); syncSwitches();
-show(TABS.some(t => t.id === Q.get('tab')) || Q.get('tab') === 'settings' ? Q.get('tab') : 'oggi');
+show(TABS.some(t => t.id === Q.get('tab')) || SUB[Q.get('tab')] ? Q.get('tab') : 'oggi');
 armAutoplay(); notifInit();
 registerSW({ immediate: true, onOfflineReady() { toast('Pronta anche senza rete'); } });

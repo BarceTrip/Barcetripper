@@ -7,9 +7,10 @@ import { G, ABBA, RIV, KIP, P } from './places.js';
   notes  "da sapere" (warn = indice della nota da evidenziare)
   planB  cosa fare se va storto
   geo    per il radar: {p} se si sta fermi, {from,to,arr,dest} se ci si sposta
+  pack   striscia Valigia in cima a Oggi: "out" alla partenza, "back" ai check-out
 */
 export const STEPS = [
- {geo:{from:P.HOME,to:P.SIB,arr:'2026-09-15T06:05',dest:'Stazione di Sibari'},at:"2026-09-15T05:45",day:"Martedì 15 settembre",city:"Sibari",mode:"road",time:"05:45",title:"Partenza da casa",place:"Verso la stazione di Sibari",det:"Ti accompagnano · in banchina entro le 06:05",nav:G+"Stazione+di+Sibari&travelmode=driving",
+ {geo:{from:P.HOME,to:P.SIB,arr:'2026-09-15T06:05',dest:'Stazione di Sibari'},at:"2026-09-15T05:45",day:"Martedì 15 settembre",city:"Sibari",mode:"road",time:"05:45",title:"Partenza da casa",pack:"out",place:"Verso la stazione di Sibari",det:"Ti accompagnano · in banchina entro le 06:05",nav:G+"Stazione+di+Sibari&travelmode=driving",
   ready:["Carta d'identità","Biglietti nell'app Trenitalia","Pillole nel bagaglio a mano","Powerbank"],
   notes:["Il treno non aspetta: alle 06:05 in banchina, non nel piazzale.","Controlla di avere la carta d'identità e non solo la patente: in aeroporto la patente non basta."],
   planB:"Se perdi il treno, fatti portare a Paola: dalla linea tirrenica passano molti più treni per Roma e hai ancora 4 ore di margine sul volo."},
@@ -38,7 +39,7 @@ export const STEPS = [
  {geo:{p:P.ABBAP},at:null,days:['2026-09-16','2026-09-17','2026-09-18'],day:"Da mercoledì 16 a venerdì 18",city:"Barcellona",mode:"free",time:"—",title:"Tre giorni pieni a Barcellona",place:"Nessun vincolo di orario",det:"16, 17 e 18 settembre · metro Sants Estació a 300 m",
   ready:["Tessera sanitaria europea per qualsiasi visita medica","112 per le emergenze"],
   notes:["Metro Sants Estació (L3, L5) all'uscita dell'hotel. Plaça d'Espanya a 700 m a piedi, Camp Nou a 15 minuti.","Fontanella più vicina in Carrer de Viriat, 240 m.","T-casual da 10 corse, circa 12 €, alle macchinette: conviene da 3 corse al giorno in su.","Borsa chiusa e portata davanti in metro e sulle Ramblas.","Prendi le pillole agli orari soliti, il fuso è lo stesso."]},
- {geo:{p:P.ABBAP},at:"2026-09-19T12:00",day:"Sabato 19 settembre",city:"Barcellona",mode:"stay",time:"12:00",title:"Check-out Abba Sants",place:"Lascia i bagagli in hotel",det:"Prenotazione BC/20CQX44UMN · deposito gratuito in reception · pomeriggio libero",tel:ABBA.tel,telTxt:ABBA.telTxt,facts:[["Prenotazione","BC/20CQX44UMN"]],
+ {geo:{p:P.ABBAP},at:"2026-09-19T12:00",day:"Sabato 19 settembre",city:"Barcellona",mode:"stay",time:"12:00",title:"Check-out Abba Sants",pack:"back",place:"Lascia i bagagli in hotel",det:"Prenotazione BC/20CQX44UMN · deposito gratuito in reception · pomeriggio libero",tel:ABBA.tel,telTxt:ABBA.telTxt,facts:[["Prenotazione","BC/20CQX44UMN"]],
   ready:["Chiave della camera","Un giro su cassetti, cassaforte e bagno"],notes:["Chiedi il tagliando del deposito bagagli.","Giornata libera fino alle 19."]},
  {geo:{from:P.ABBAP,to:P.BCN2,arr:'2026-09-19T19:45',dest:'Aeroporto, Terminal 2'},at:"2026-09-19T19:00",day:"Sabato 19 settembre",city:"Barcellona",mode:"rail",time:"19:00",title:"Riprendi i bagagli e vai in aeroporto",place:"Sants → Aeroport Terminal 2",det:"Treno R2 Nord da Sants · ~20 min · arriva direttamente al T2",nav:G+"Aeroport+del+Prat+Terminal+2&travelmode=transit",
   facts:[["Al gate entro","21:05"],["Terminal","T2"]],ready:["Biglietto Rodalies dalle macchinette di Sants, circa 5 €","Carta d'imbarco Wizz nell'app"],
@@ -55,7 +56,7 @@ export const STEPS = [
  {geo:{p:P.RIVP},at:"2026-09-20T00:30",day:"Sabato 19 settembre",city:"Fiumicino",mode:"stay",time:"00:30",title:"Check-in Hotel Riviera",place:"Reception aperta 24 ore",det:"Prenotazione 51220260902093925228 · 105 € con colazione · reception 24 ore",addr:RIV.addr,tel:RIV.tel,telTxt:RIV.telTxt,
   facts:[["Prenotazione","51220260902093925228"],["Tariffa","105 € con colazione"],["Pagamento","in hotel"],["Check-out","20 set"]],
   ready:["Documento","Codice prenotazione 51220260902093925228","Carta per pagare"],notes:["Arrivo dopo mezzanotte già concordato: la reception è attiva 24 ore.","C'è una scala all'ingresso, niente rampa: con la valigia sappilo.","Prendi la pillola della sera se non l'hai già fatto.","Domani colazione inclusa, poi navetta per l'aeroporto a 6 €."]},
- {geo:{from:P.RIVP,to:P.FCO,arr:'2026-09-20T11:15',dest:'Fiumicino'},at:"2026-09-20T10:30",day:"Domenica 20 settembre",city:"Fiumicino",mode:"stay",time:"10:30",title:"Check-out Hotel Riviera",place:"Torna verso l'aeroporto",det:"Prenotazione 51220260902093925228 · colazione inclusa · navetta 6 €",tel:RIV.tel,telTxt:RIV.telTxt,
+ {geo:{from:P.RIVP,to:P.FCO,arr:'2026-09-20T11:15',dest:'Fiumicino'},at:"2026-09-20T10:30",day:"Domenica 20 settembre",city:"Fiumicino",mode:"stay",time:"10:30",title:"Check-out Hotel Riviera",pack:"back",place:"Torna verso l'aeroporto",det:"Prenotazione 51220260902093925228 · colazione inclusa · navetta 6 €",tel:RIV.tel,telTxt:RIV.telTxt,
   facts:[["Prenotazione","51220260902093925228"],["Navetta","6 €"],["Al T3 entro","11:15"]],
   ready:["Colazione fatta, è inclusa","6 € per la navetta","Conto saldato in reception"],notes:["Il treno per Sibari è alle 18:20: hai tutto il tempo.","La navetta parte dall'hotel ogni 40 minuti dalle 6:00 e ti lascia al Terminal 3, parcheggio bus 24.","Dal T3 alla stazione del Leonardo Express sono 5 minuti a piedi seguendo i cartelli."]},
  {geo:{from:P.FCO,to:P.ROMA,arr:'2026-09-20T12:02',dest:'Roma Termini'},at:"2026-09-20T11:30",day:"Domenica 20 settembre",city:"Fiumicino → Roma",mode:"rail",time:"11:30",title:"Leonardo Express",place:"Fiumicino T3 → Roma Termini",det:"32 min · 14 € · arrivo verso mezzogiorno",

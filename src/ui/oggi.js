@@ -5,6 +5,7 @@ import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
 import { weatherFor, WX_ICONS, deg } from '../weather.js';
+import { bagStrip, bagStripBind } from './valigia.js';
 
 export const codeTag = s => s.code ? '<span class="code">' + s.code + '</span>' : '';
 const ON = { air: '#26333A' };  // colore testo sulla tessera gialla
@@ -72,8 +73,9 @@ export function drawOggi(animate) {
   const notes = '<div class="sec"><div class="sh"><span class="eyebrow">Da sapere</span></div>' + s.notes.map((n, k) => '<div class="note' + (s.warn === k ? ' warn' : '') + '">' + n + '</div>').join('') + '</div>';
   const planb = s.planB ? '<div class="sec"><div class="sh"><span class="eyebrow">Se va storto</span></div><div class="planb"><div class="mi">' + ICONS.compass + '</div><p>' + s.planB + '</p></div></div>' : '';
 
-  $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + hero + nav + ready + notes + planb;
-  updCd(); loadWx(s);
+  /* striscia della valigia: alla partenza (pack "out") e ai check-out (pack "back") */
+  $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + (s.pack ? bagStrip(s.pack) : '') + hero + nav + ready + notes + planb;
+  updCd(); loadWx(s); bagStripBind();
 
   $('#bBack').onclick = () => emit('advance', -1);
   $('#bNext').onclick = () => emit('advance', 1);

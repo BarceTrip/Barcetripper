@@ -23,6 +23,7 @@ const row = (id, ico, t, sub, sw) => '<button class="srow" id="' + id + '">' + i
 export function drawSettings() {
   $('#pSettings').innerHTML = header('Preferenze', 'Impostazioni', { back: 'bSetBack' }) +
     row('sNow', ICONS.clock, "Vai all'ora attuale", [null, 'Salta alla tappa giusta per adesso']) +
+    row('sBag', ICONS.bag, 'Valigia', [null, 'Cosa mettere in borsa, andata e ritorno']) +
     row('sNotif', ICONS.bell, 'Avvisi 30 minuti prima', ['notifSub', 'Non attivi'], 'swNotif') +
     row('sIcs', ICONS.cal, 'Salva nel calendario', [null, '22 eventi con avviso, funziona ad app chiusa']) +
     '<div class="sec"><div class="sh"><span class="eyebrow">Aspetto e suoni</span></div>' +

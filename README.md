@@ -29,12 +29,14 @@ src/styles.css        tutto lo stile (tema ispirato a Bring!)
 src/state.js          stato condiviso + salvataggio in localStorage
 src/data/steps.js     LE TAPPE: qui si aggiunge o modifica il viaggio
 src/data/places.js    hotel, coordinate, prefisso Google Maps
+src/data/valigia.js   oggetti predefiniti della valigia
 src/icons.js          icone SVG inline
 src/ui/oggi.js        pagina Oggi (tessera tappa, checklist a tessere, note, piano B)
 src/ui/percorso.js    pagina Percorso (tappe per giorno)
 src/ui/spese.js       pagina Spese
 src/ui/sos.js         pagina Emergenza
 src/ui/settings.js    pagina Impostazioni e tema
+src/ui/valigia.js     pagina Valigia (tessere spuntabili, andata e ritorno)
 src/ui/confetti.js    coriandoli a fine viaggio
 src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
 src/audio/sfx.js      effetti sonori
@@ -47,11 +49,15 @@ scripts/icons.py      genera le icone PNG
 
 ## Aggiungere una tappa
 
-Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cronologico. Il campo `geo` dice al radar dove dovresti essere: `{p: P.LUOGO}` se sei fermo, `{from, to, arr, dest}` se ti stai spostando. Le coordinate nuove vanno in `places.js`.
+Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cronologico. Il campo `geo` dice al radar dove dovresti essere: `{p: P.LUOGO}` se sei fermo, `{from, to, arr, dest}` se ti stai spostando. Le coordinate nuove vanno in `places.js`. `pack: "out"` (partenza) o `pack: "back"` (check-out) fa comparire in cima a Oggi la striscia della valigia.
 
 ## Interfaccia
 
-Cinque schede in basso: Oggi, Percorso, Spese, Radar, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese`, e `&theme=light` per forzare il tema (comodo per i test).
+Cinque schede in basso: Oggi, Percorso, Spese, Radar, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
+
+## Valigia
+
+Tessere spuntabili come quelle di Oggi, divise per categoria. Gli oggetti predefiniti stanno in `src/data/valigia.js`; quelli aggiunti dall'app, quelli tolti con "Togli oggetti" e le spunte restano salvati sul telefono. Il selettore Andata/Ritorno azzera le spunte per rifare la valigia al ritorno senza dimenticare nulla: in Ritorno compare anche la categoria "In camera, prima di uscire". La striscia in cima a Oggi appare alla partenza e ai due check-out; dalle impostazioni la pagina si apre sempre. Il bagaglio è solo l'oggetto personale sotto il sedile, 40×30×20 cm, su entrambi i voli.
 
 ## Meteo
 
