@@ -45,10 +45,11 @@ export function drawOggi(dir) {
   const ni = nowIndex();
   const nowBtn = ni >= 0 && ni !== S.i ? '<button class="nowchip" id="bNow">' + ICONS.clock + 'Adesso</button>' : '';
 
-  const chips = s.facts ? '<div class="chips">' + s.facts.map(f => {
+  /* i chip scorrono in un nastro lento e continuo se non entrano nella tessera (vedi marquee) */
+  const chips = s.facts ? '<div class="mq" id="mq"><div class="mq-track" id="mqTrack"><span class="mq-set">' + s.facts.map(f => {
     const cp = /PNR|Posto|Carrozza|Prenotazione|Biglietto/.test(f[0]);
     return '<span class="chip' + (cp ? ' copy' : '') + '"' + (cp ? ' data-v="' + f[1] + '" role="button"' : '') + '>' + f[0] + ' <b>' + f[1] + '</b>' + (cp ? ICONS.copy : '') + '</span>';
-  }).join('') + '</div>' : '';
+  }).join('') + '</span></div></div>' : '';
   let acts = '';
   if (s.tel) acts += '<a class="btn" href="tel:' + s.tel + '">' + ICONS.phone + 'Chiama</a>';
   if (s.nav) acts += '<a class="btn dk" href="' + s.nav + '" target="_blank" rel="noopener">' + ICONS.nav + 'Indicazioni</a>';
@@ -61,7 +62,7 @@ export function drawOggi(dir) {
     '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + '<div class="wx" id="wx"><span class="wxp">Meteo in arrivo…</span></div>' + chips + acts + '</div>';
 
   const nav = '<div class="nav2"><button class="btn ghost" id="bBack"' + (S.i === 0 ? ' disabled' : '') + '>' + ICONS.chevL + 'Indietro</button>' +
-    '<button class="btn pri" id="bNext"' + (last ? ' disabled' : '') + '>' + (last ? 'Viaggio finito' : 'Fatto, avanti') + (last ? '' : ICONS.chevR) + '</button></div>';
+    '<button class="btn pri next" id="bNext"' + (last ? ' disabled' : '') + '><span class="mark">' + ICONS.sign + '</span>' + (last ? 'Viaggio finito' : ICONS.sign + 'Fatto, avanti' + ICONS.chevR) + '</button></div>';
 
   let ready = '';
   if (s.ready) {
@@ -78,7 +79,7 @@ export function drawOggi(dir) {
   /* striscia della valigia: alla partenza (pack "out") e ai check-out (pack "back") */
   $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + (s.pack ? bagStrip(s.pack) : '') +
     '<div class="sv' + (dir > 0 ? ' in-r' : dir < 0 ? ' in-l' : '') + '" id="sv">' + hero + nav + ready + notes + planb + '</div>';
-  updCd(); loadWx(s); bagStripBind();
+  updCd(); loadWx(s); bagStripBind(); marquee();
 
   $('#bBack').onclick = () => emit('advance', -1);
   $('#bNext').onclick = () => emit('advance', 1);
@@ -89,6 +90,19 @@ export function drawOggi(dir) {
     sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(0);
   });
   $$('#pOggi .chip.copy').forEach(f => f.onclick = () => copyTxt(f.dataset.v));
+}
+
+/* nastro dei chip: parte solo se i chip non entrano; 26 px al secondo, si ferma mentre lo tieni premuto */
+function marquee() {
+  const t = $('#mqTrack'), box = $('#mq'); if (!t || !box) return;
+  const set = t.firstElementChild, w = set.getBoundingClientRect().width;
+  if (w <= box.clientWidth - 2) return;
+  t.appendChild(set.cloneNode(true));
+  t.style.setProperty('--w', w.toFixed(1) + 'px'); t.style.animationDuration = (w / 26).toFixed(1) + 's'; t.classList.add('on');
+  const hold = on => t.classList.toggle('hold', on);
+  box.addEventListener('touchstart', () => hold(true), { passive: true }); box.addEventListener('touchend', () => hold(false), { passive: true }); box.addEventListener('touchcancel', () => hold(false), { passive: true });
+  box.addEventListener('mousedown', () => hold(true)); box.addEventListener('mouseup', () => hold(false)); box.addEventListener('mouseleave', () => hold(false));
+  $$('#mqTrack .chip.copy').forEach(f => f.onclick = () => copyTxt(f.dataset.v));
 }
 
 /* meteo nel luogo e all'ora della tappa */
