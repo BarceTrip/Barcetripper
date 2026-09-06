@@ -42,8 +42,8 @@ src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
 src/audio/sfx.js      effetti sonori
 src/audio/music.js    rumba catalana generativa
 src/notify.js         avvisi 30 minuti prima + export ICS
-src/ui/luoghi.js      pagina Luoghi (mappa SVG, percorsi a piedi o in metro)
-src/data/luoghi.js    luoghi, fontanelle, linee metro, geometria della mappa
+src/ui/luoghi.js      pagina Luoghi (mappa 3D MapLibre, percorsi a piedi o in metro)
+src/data/luoghi.js    luoghi e fontanelle
 src/weather.js        meteo per tappa (Open-Meteo) e icone meteo vettoriali
 scripts/icons.py      genera le icone PNG
 ```
@@ -62,7 +62,7 @@ Tessere spuntabili come quelle di Oggi, divise per categoria. Gli oggetti predef
 
 ## Luoghi
 
-Mappa stilizzata di Barcellona disegnata in SVG, quindi anche offline, con l'hotel al centro: due zoom (Vicino, 4 km; Città, 12 km), mare, Montjuïc, Collserola, le vie principali, le linee L3 e L5, le fontanelle pubbliche entro 1,4 km (OpenStreetMap) e il tuo punto GPS. I luoghi stanno in `src/data/luoghi.js`: i tuoi posti, quelli a piedi dall'hotel e quelli in città con la metro da Sants già scritta. Toccando un luogo l'app stima il modo più comodo per arrivarci da dove sei (a piedi, in metro da Sants, o con i mezzi) e apre Google Maps con le indicazioni. Stella per "da vedere", spunta per "fatto".
+Mappa 3D interattiva con l'hotel al centro: MapLibre GL con le mappe vettoriali di OpenFreeMap (gratuite, senza chiave), rilievo del terreno dagli AWS Terrain Tiles ed edifici estrusi. Pinch per zoomare, due dita per ruotare e inclinare, tasto 3D/2D e tasto per tornare all'hotel. Sopra ci sono i tuoi posti, i luoghi da vedere e le fontanelle pubbliche entro 1,4 km (OpenStreetMap), più il tuo punto GPS con il controllo di MapLibre. I luoghi stanno in `src/data/luoghi.js`. Toccando un luogo l'app stima il modo più comodo per arrivarci da dove sei (a piedi, in metro da Sants, o con i mezzi), scarica il percorso pedonale reale da OSRM e lo disegna, e apre Google Maps con le indicazioni. Stella per "da vedere", spunta per "fatto". La mappa ha bisogno della rete: le tessere già viste restano in cache un mese, l'elenco e le stime funzionano anche offline.
 
 ## Meteo
 

@@ -25,8 +25,14 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
         navigateFallback: '/index.html',
+        /* tessere, font e rilievo della mappa già visti restano in cache un mese */
+        runtimeCaching: [
+          { urlPattern: /^https:\/\/tiles\.openfreemap\.org\//, handler: 'CacheFirst', options: { cacheName: 'mappa', expiration: { maxEntries: 1500, maxAgeSeconds: 30 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },
+          { urlPattern: /^https:\/\/s3\.amazonaws\.com\/elevation-tiles-prod\//, handler: 'CacheFirst', options: { cacheName: 'rilievo', expiration: { maxEntries: 600, maxAgeSeconds: 30 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },
+        ],
       },
     }),
   ],
   build: { target: 'es2020' },
+  worker: { format: 'es' },
 });

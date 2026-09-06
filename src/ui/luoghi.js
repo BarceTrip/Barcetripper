@@ -1,13 +1,26 @@
-/* Pagina "Luoghi": mappa stilizzata di Barcellona con l'hotel al centro, i tuoi posti, le cose da vedere
-   e le fontanelle; per ogni luogo il modo più comodo per arrivarci da dove sei (o dall'hotel). */
-import { HOTEL, SANTS, ZONES, PLACES, FOUNTAINS, METRO, GEO } from '../data/luoghi.js';
+/* Pagina "Luoghi": mappa 3D interattiva (MapLibre GL, mappe OpenFreeMap, rilievo AWS Terrain Tiles) con l'hotel,
+   i tuoi posti, le cose da vedere e le fontanelle; per ogni luogo il modo più comodo per arrivarci da dove sei.
+   La mappa e il percorso a piedi reale (OSRM) hanno bisogno della rete; elenco e stime funzionano anche senza. */
+import { Map as GLMap, NavigationControl, GeolocateControl, Marker, setWorkerUrl } from 'maplibre-gl';
+import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { HOTEL, SANTS, ZONES, PLACES, FOUNTAINS } from '../data/luoghi.js';
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header } from './dom.js';
 import { sfx } from '../audio/sfx.js';
 
-const YOU = { pos: null, acc: null, ts: 0, err: null, busy: false };
+/* il worker di MapLibre viene impacchettato da Vite come modulo separato */
+setWorkerUrl(mapWorkerUrl);
+
+const STYLE = { light: 'https://tiles.openfreemap.org/styles/liberty', dark: 'https://tiles.openfreemap.org/styles/fiord' };
+const DEM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+const OSRM = 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/';
+const EMPTY = { type: 'FeatureCollection', features: [] };
+const YOU = { pos: null, acc: null, err: null, drawn: null };
+const M = { map: null, geo: null, theme: null, ready: false, pitch: true };
 let sel = null, filter = 'all';
+const walks = new Map();   // percorsi a piedi reali già scaricati
 const HP = { id: 'hotel', n: 'Abba Sants', z: 'sants', p: HOTEL, a: 'Carrer de Numància 32', d: 'Il tuo hotel: metro Sants Estació a 300 m, reception 24 ore, deposito bagagli gratuito.', near: true, big: true };
 const byId = id => id === 'hotel' ? HP : PLACES.find(p => p.id === id);
 
@@ -16,73 +29,123 @@ export function hav(a, b) {
   const h = Math.sin(dLa / 2) ** 2 + Math.cos(l1) * Math.cos(l2) * Math.sin(dLo / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
-/* proiezione centrata sull'hotel: 1 unità = 10 m, y verso il basso */
-const xy = p => [(p[1] - HOTEL[1]) * 8350, -(p[0] - HOTEL[0]) * 11132];
-const VIEW = { near: 440, city: 1200 };   // larghezza della mappa in unità: 4,4 km e 12 km
-
 const inBcn = () => !!YOU.pos && hav(YOU.pos, HOTEL) < 30;
 const origin = () => inBcn() ? YOU.pos : HOTEL;
-/* a piedi: linea d'aria × 1,28 di strade, 78 m al minuto */
+/* stima a piedi senza rete: linea d'aria × 1,28 di strade, 78 m al minuto */
 const walkMin = (a, b) => Math.max(1, Math.round(hav(a, b) * 1.28 * 1000 / 78));
 const fmtKm = d => d < 1 ? Math.round(d * 100) * 10 + ' m' : d.toFixed(1).replace('.', ',') + ' km';
 const metroTxt = m => (m.txt || 'da Sants Estació ' + m.l + ' direzione ' + m.dir + ', ' + m.n + (m.n === 1 ? ' fermata' : ' fermate') + ', scendi a ' + m.st) + (m.walk ? ', poi ' + m.walk + ' min a piedi' : '');
+const lngLat = p => [p[1], p[0]];
 
-/* Il modo più comodo per arrivare a p: a piedi, in metro da Sants (2 min a fermata, 3 di attesa,
-   6 per un cambio) oppure "con i mezzi" quando sei lontano da Sants e la strada è lunga. */
+/* Il modo più comodo per arrivare a p: a piedi (con il percorso reale se è già arrivato, altrimenti la stima),
+   in metro da Sants (2 min a fermata, 3 di attesa, 6 per un cambio) oppure "con i mezzi" quando sei lontano da Sants. */
 export function route(p) {
-  const o = origin(), you = inBcn(), dist = hav(o, p.p) * 1.28, walk = walkMin(o, p.p);
+  const o = origin(), you = inBcn(), w = walks.get(wkey(o, p));
+  const dist = w ? w.km : hav(o, p.p) * 1.28, walk = w ? w.min : walkMin(o, p.p);
   let metro = null;
   if (p.m && hav(o, SANTS) < 0.9) { const toSants = walkMin(o, SANTS); metro = { ...p.m, toSants, tot: toSants + 3 + p.m.n * 2 + (p.m.chg ? 6 : 0) + (p.m.walk || 0) }; }
   const best = metro && walk > 22 && metro.tot < walk - 5 ? 'metro' : !metro && walk > 35 ? 'transit' : 'walk';
-  return { o, you, dist, walk, metro, best };
+  return { o, you, dist, walk, metro, best, real: !!w };
+}
+/* percorso a piedi reale da OSRM (server FOSSGIS, profilo pedonale) */
+const wkey = (o, p) => o[0].toFixed(3) + ',' + o[1].toFixed(3) + '>' + p.id;
+async function fetchWalk(o, p) {
+  const k = wkey(o, p); if (walks.has(k)) return walks.get(k);
+  const r = await fetch(OSRM + o[1] + ',' + o[0] + ';' + p.p[1] + ',' + p.p[0] + '?overview=full&geometries=geojson');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json(); const rt = j.routes && j.routes[0]; if (j.code !== 'Ok' || !rt) throw new Error('no route');
+  const v = { km: rt.distance / 1000, min: Math.max(1, Math.round(rt.duration / 60)), geo: rt.geometry };
+  walks.set(k, v); return v;
 }
 
 /* ---- mappa ---- */
-const fx = v => v.toFixed(0);
-const path = pts => 'M' + pts.map(p => xy(p).map(fx).join(' ')).join('L');
-function mapSvg() {
-  const city = S.pl.zoom === 'city', W = VIEW[city ? 'city' : 'near'], k = W / 400;
-  let s = '<svg class="bcn" viewBox="' + (-W / 2) + ' ' + (-W / 2) + ' ' + W + ' ' + W + '" xmlns="http://www.w3.org/2000/svg">';
-  s += '<path class="sea" d="' + path(GEO.sea) + 'Z"/><path class="hill" d="' + path(GEO.collserola) + 'Z"/><path class="hill" d="' + path(GEO.montjuic) + 'Z"/>';
-  GEO.streets.forEach(st => { s += '<path class="street" d="' + path(st.pts) + '" stroke-width="' + (2.4 * k) + '"/>'; });
-  s += '<path class="l3" d="' + path(METRO.L3) + '" stroke-width="' + (2.8 * k) + '"/><path class="l5" d="' + path(METRO.L5) + '" stroke-width="' + (2.8 * k) + '"/>';
-  if (!city) s += FOUNTAINS.map(f => { const [x, y] = xy(f); return '<circle class="fnt" cx="' + fx(x) + '" cy="' + fx(y) + '" r="2.6"/>'; }).join('');
-  GEO.labels.forEach(l => {
-    if (city ? l.near : !l.near) return;
-    const [x, y] = xy(l.p);
-    s += '<text class="glab" x="' + fx(x) + '" y="' + fx(y) + '" font-size="' + l.sz + '"' + (l.rot ? ' transform="rotate(' + l.rot + ' ' + fx(x) + ' ' + fx(y) + ')"' : '') + '>' + l.t + '</text>';
-  });
-  if (sel) { const p = byId(sel); if (p) { const a = xy(origin()), b = xy(p.p); s += '<path class="rt" d="M' + a.map(fx).join(' ') + 'L' + b.map(fx).join(' ') + '" stroke-width="' + (2.4 * k) + '" stroke-dasharray="' + (7 * k) + ' ' + (6 * k) + '"/>'; } }
-  const r = 6 * k, fs = 12 * k;
-  const lab = (p, x, y) => {
-    const lp = p.lp || 'r', off = r + 4 * k; let ax = x + off, ay = y + fs * .36, an = 'start';
-    if (lp === 'l') { ax = x - off; an = 'end'; } else if (lp === 't') { ax = x; ay = y - off - fs * .2; an = 'middle'; } else if (lp === 'b') { ax = x; ay = y + off + fs * .85; an = 'middle'; }
-    return '<text x="' + fx(ax) + '" y="' + fx(ay) + '" font-size="' + fs + '" text-anchor="' + an + '" stroke-width="' + (3.5 * k) + '">' + (p.s || p.n) + '</text>';
-  };
-  PLACES.forEach(p => {
-    const [x, y] = xy(p.p), on = sel === p.id, inside = Math.abs(x) < W / 2 - 4 && Math.abs(y) < W / 2 - 4;
-    if (!inside) return;
-    /* nella vista città solo i luoghi principali hanno il nome, gli altri restano pallini piccoli */
-    const show = !city || p.cl || on, rr = on ? r * 1.4 : city && !(p.big || p.z === 'mine') ? r * .6 : r;
-    s += '<g class="pt' + (on ? ' on' : '') + (S.pl.done[p.id] ? ' done' : '') + '" data-id="' + p.id + '"><circle class="hit" cx="' + fx(x) + '" cy="' + fx(y) + '" r="' + (16 * k) + '"/>' +
-      (S.pl.want[p.id] ? '<circle class="wr" cx="' + fx(x) + '" cy="' + fx(y) + '" r="' + (rr + 3.5 * k) + '" stroke-width="' + (2 * k) + '"/>' : '') +
-      '<circle class="d" cx="' + fx(x) + '" cy="' + fx(y) + '" r="' + rr + '" fill="' + ZONES[p.z].c + '" stroke-width="' + (1.6 * k) + '"/>' + (show ? lab(p, x, y) : '') + '</g>';
-  });
-  /* l'hotel: uno spillo con la punta sul punto esatto */
-  const hk = 1.1 * k;
-  s += '<g class="hpin' + (sel === 'hotel' ? ' on' : '') + '" data-id="hotel"><g transform="scale(' + hk + ')"><path d="M0 0C-9-10-11-15-11-20a11 11 0 0 1 22 0c0 5-2 10-11 20z" stroke-width="1.6"/><circle cx="0" cy="-20" r="4.2"/></g>' +
-    '<text class="hlab" x="' + fx(14 * hk) + '" y="' + fx(-15 * hk) + '" font-size="' + (12.5 * k) + '" stroke-width="' + (3.5 * k) + '">Abba Sants</text></g>';
-  if (inBcn()) { const [x, y] = xy(YOU.pos), ar = Math.min(60 * k, Math.max(0, (YOU.acc || 0) / 10)); s += '<circle class="youa" cx="' + fx(x) + '" cy="' + fx(y) + '" r="' + fx(ar) + '"/><circle class="you" cx="' + fx(x) + '" cy="' + fx(y) + '" r="' + (6.5 * k) + '" stroke-width="' + (2.2 * k) + '"/>'; }
-  return s + '</svg>';
+function placesGeo() {
+  return { type: 'FeatureCollection', features: PLACES.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(p.p) },
+    properties: { id: p.id, s: p.s || p.n, color: ZONES[p.z].c, prio: p.z === 'mine' ? 0 : p.big ? 1 : 2, want: S.pl.want[p.id] ? 1 : 0, done: S.pl.done[p.id] ? 1 : 0, sel: sel === p.id ? 1 : 0 } })) };
 }
+function initMap() {
+  M.theme = S.theme;
+  const map = M.map = new GLMap({ container: 'lCanvas', style: STYLE[S.theme], center: lngLat(HOTEL), zoom: 14.3, pitch: 55, bearing: -20, maxPitch: 72, attributionControl: { compact: true }, preserveDrawingBuffer: new URLSearchParams(location.search).has('shot') });   // ?shot serve solo agli screenshot di test
+  map.addControl(new NavigationControl({ visualizePitch: true }), 'top-right');
+  M.geo = new GeolocateControl({ positionOptions: { enableHighAccuracy: true, timeout: 12000 }, trackUserLocation: true, showAccuracyCircle: true, fitBoundsOptions: { maxZoom: 16 } });
+  map.addControl(M.geo, 'top-right');
+  M.geo.on('geolocate', e => {
+    YOU.pos = [e.coords.latitude, e.coords.longitude]; YOU.acc = e.coords.accuracy; YOU.err = null; eyebrow();
+    /* la lista si ridisegna solo se ti sei spostato di almeno 30 m */
+    if (!YOU.drawn || hav(YOU.drawn, YOU.pos) > .03) { YOU.drawn = YOU.pos; drawBody(); drawRoute(); }
+  });
+  M.geo.on('error', e => { YOU.err = e.code === 1 ? 'Posizione negata: distanze dall\'hotel' : 'Posizione non trovata: distanze dall\'hotel'; eyebrow(); });
+  map.on('style.load', addData);
+  map.on('load', () => { try { M.geo.trigger(); } catch (e) {} });
+  map.on('error', e => { console.warn('Mappa:', e && e.error ? e.error.message || e.error : e); if (!M.ready) { const el = $('#lOff'); if (el) el.hidden = false; } });
+  /* lo spillo dell'hotel */
+  const el = document.createElement('button'); el.className = 'hpin'; el.setAttribute('aria-label', 'Abba Sants');
+  el.innerHTML = '<span class="hpin-b">' + ICONS.stay + '</span><span class="hpin-t">Abba Sants</span>';
+  el.onclick = () => select('hotel', false);
+  new Marker({ element: el, anchor: 'bottom' }).setLngLat(lngLat(HOTEL)).addTo(map);
+}
+/* rilievo, edifici 3D, fontanelle, luoghi, percorso: si rifanno a ogni cambio di stile (tema) */
+function addData() {
+  const map = M.map, dark = M.theme === 'dark', style = map.getStyle();
+  const firstSym = (style.layers.find(l => l.type === 'symbol') || {}).id;
+  if (!map.getSource('dem')) map.addSource('dem', { type: 'raster-dem', tiles: [DEM], encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'Terrain Tiles (AWS)' });
+  map.setTerrain({ source: 'dem', exaggeration: 1.15 });
+  map.addLayer({ id: 'hills', type: 'hillshade', source: 'dem', paint: { 'hillshade-exaggeration': dark ? .28 : .38, 'hillshade-shadow-color': dark ? '#0b1320' : '#6b5d4a', 'hillshade-highlight-color': dark ? '#5a6d8a' : '#ffffff' } }, firstSym);
+  if (!map.getLayer('building-3d')) {
+    const vec = Object.keys(style.sources).find(k => style.sources[k].type === 'vector');
+    if (vec) map.addLayer({ id: 'building-3d', type: 'fill-extrusion', source: vec, 'source-layer': 'building', minzoom: 14, paint: { 'fill-extrusion-color': dark ? '#5d6f92' : '#d8cfc2', 'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8], 'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0], 'fill-extrusion-opacity': .7 } }, firstSym);
+  }
+  map.addSource('fnt', { type: 'geojson', data: { type: 'FeatureCollection', features: FOUNTAINS.map(f => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(f) }, properties: {} })) } });
+  map.addLayer({ id: 'fnt', type: 'circle', source: 'fnt', minzoom: 13.5, paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 13.5, 2, 17, 5.5], 'circle-color': '#4DB6E8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1, 'circle-pitch-alignment': 'map' } });
+  map.addSource('rt', { type: 'geojson', data: EMPTY });
+  map.addLayer({ id: 'rt', type: 'line', source: 'rt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': dark ? '#F3F6F7' : '#26333A', 'line-width': 4, 'line-opacity': .8, 'line-dasharray': [1.2, 1.4] } });
+  map.addSource('pl', { type: 'geojson', data: placesGeo() });
+  map.addLayer({ id: 'pl-want', type: 'circle', source: 'pl', filter: ['==', ['get', 'want'], 1], paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 8, 15, 13], 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': dark ? '#fff' : '#26333A', 'circle-stroke-width': 2, 'circle-pitch-alignment': 'map' } });
+  map.addLayer({ id: 'pl', type: 'circle', source: 'pl', paint: {
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, ['case', ['==', ['get', 'sel'], 1], 9, ['<=', ['get', 'prio'], 1], 5, 3.5], 15, ['case', ['==', ['get', 'sel'], 1], 12, 8]],
+    'circle-color': ['get', 'color'], 'circle-stroke-color': ['case', ['==', ['get', 'sel'], 1], '#fff', dark ? '#1F2A31' : '#ffffff'], 'circle-stroke-width': 2,
+    'circle-opacity': ['case', ['==', ['get', 'done'], 1], .5, 1] } });
+  map.addLayer({ id: 'pl-lab', type: 'symbol', source: 'pl', layout: {
+    'text-field': ['step', ['zoom'], ['case', ['<=', ['get', 'prio'], 1], ['get', 's'], ''], 14, ['get', 's']], 'text-font': ['Noto Sans Bold'], 'text-size': 12.5,
+    'text-variable-anchor': ['left', 'right', 'top', 'bottom'], 'text-radial-offset': 1, 'text-justify': 'auto', 'symbol-sort-key': ['get', 'prio'] },
+    paint: { 'text-color': dark ? '#F3F6F7' : '#26333A', 'text-halo-color': dark ? '#1F2A31' : '#ffffff', 'text-halo-width': 1.6 } });
+  if (!M.clicks) { M.clicks = true; ['pl', 'pl-lab'].forEach(l => map.on('click', l, e => { const f = e.features && e.features[0]; if (f) select(f.properties.id, false); })); }
+  M.ready = true; drawRoute(); offline();
+}
+const refreshPl = () => { if (M.ready) M.map.getSource('pl').setData(placesGeo()); };
+function drawRoute() {
+  if (!M.ready) return;
+  const p = sel && byId(sel); if (!p) { M.map.getSource('rt').setData(EMPTY); return; }
+  const o = origin(), w = walks.get(wkey(o, p));
+  M.map.getSource('rt').setData({ type: 'Feature', geometry: w ? w.geo : { type: 'LineString', coordinates: [lngLat(o), lngLat(p.p)] }, properties: {} });
+}
+/* l'avviso copre la mappa solo finché lo stile non è arrivato e la rete manca (o il caricamento è fallito) */
+function offline() { const el = $('#lOff'); if (el) el.hidden = M.ready || navigator.onLine !== false; }
+function flyTo(p) { if (M.ready) M.map.flyTo({ center: lngLat(p.p), zoom: Math.max(M.map.getZoom(), 15.5), pitch: M.pitch ? 55 : 0, duration: 900 }); }
 
-/* ---- scheda del luogo scelto ---- */
+/* ---- pagina ---- */
+function build() {
+  $('#pLuoghi').innerHTML = header('Distanze dall\'hotel', 'Luoghi', { gear: true, extra: '<button class="ibtn" id="lLoc" aria-label="Dove sono">' + ICONS.locate + '</button>' }) +
+    '<div class="map"><div id="lCanvas"></div><div class="mapui"><button id="lPitch" class="on">3D</button><button id="lHome" aria-label="Torna all\'hotel">' + ICONS.stay + '</button></div>' +
+    '<div class="mapoff" id="lOff" hidden><b>Serve la rete per la mappa</b><span>Elenco, stime e indicazioni funzionano lo stesso.</span></div></div>' +
+    '<div class="legend">' + Object.keys(ZONES).map(z => '<span><i style="--c:' + ZONES[z].c + '"></i>' + ZONES[z].n + '</span>').join('') + '<span><i style="--c:#4DB6E8;width:7px;height:7px"></i>Fontanelle</span></div>' +
+    '<div id="lBody"></div><div class="about">Mappa OpenFreeMap · rilievo AWS Terrain Tiles · percorsi a piedi OSRM · orari indicativi, verifica prima</div>';
+  $('#lLoc').onclick = () => { sfx('tick'); if (M.geo) M.geo.trigger(); };
+  $('#lPitch').onclick = () => { M.pitch = !M.pitch; sfx('tick'); $('#lPitch').classList.toggle('on', M.pitch); if (M.map) M.map.easeTo({ pitch: M.pitch ? 55 : 0, duration: 600 }); };
+  $('#lHome').onclick = () => { sfx('tick'); if (M.map) M.map.flyTo({ center: lngLat(HOTEL), zoom: 15, pitch: M.pitch ? 55 : 0, bearing: -20, duration: 900 }); };
+  window.addEventListener('online', offline); window.addEventListener('offline', offline);
+  initMap(); offline();
+}
+function eyebrow() {
+  const el = $('#pLuoghi .ph .eyebrow'); if (!el) return;
+  el.textContent = inBcn() ? 'Dalla tua posizione · ±' + Math.round(YOU.acc) + ' m' : (YOU.err || (YOU.pos ? 'Non sei a Barcellona: distanze dall\'hotel' : 'Distanze dall\'hotel'));
+}
 function detail(p) {
   const r = route(p), from = r.you ? 'dalla tua posizione' : 'dall\'hotel';
   let main, alt = '', ico = ICONS.road;
   if (p.id === 'hotel' && r.you && r.dist < .08) main = '<b>Sei in hotel.</b>';
-  else if (p.id === 'hotel' && !r.you) main = '<b>Il punto di partenza.</b> Quando sei a Barcellona, da qui ti porto indietro.';
-  else if (r.best === 'walk') { main = '<b>A piedi, ' + r.walk + ' min</b> ' + from + ', ' + fmtKm(r.dist) + '.'; if (r.metro && r.walk > 15) alt = 'In metro circa ' + r.metro.tot + ' min: ' + metroTxt(r.metro) + '.'; }
+  else if (p.id === 'hotel' && !r.you) main = '<b>Il punto di partenza.</b> Quando sei a Barcellona, da qui ti riporto indietro.';
+  else if (r.best === 'walk') { main = '<b>A piedi, ' + r.walk + ' min</b> ' + from + ', ' + fmtKm(r.dist) + (r.real ? ', sul percorso disegnato.' : '.'); if (r.metro && r.walk > 15) alt = 'In metro circa ' + r.metro.tot + ' min: ' + metroTxt(r.metro) + '.'; }
   else if (r.best === 'metro') { ico = ICONS.rail; main = '<b>In metro, circa ' + r.metro.tot + ' min.</b> ' + (r.metro.toSants > 1 ? r.metro.toSants + ' min a piedi fino a Sants Estació, poi ' : '') + metroTxt(r.metro) + '.'; alt = 'A piedi sarebbero ' + r.walk + ' min, ' + fmtKm(r.dist) + '.'; }
   else { ico = ICONS.rail; main = '<b>Con i mezzi.</b> Sei lontano da Sants: apri le indicazioni e prendi la soluzione proposta.'; alt = 'A piedi ' + r.walk + ' min, ' + fmtKm(r.dist) + '.'; }
   const dest = p.p[0].toFixed(5) + ',' + p.p[1].toFixed(5), org = r.you ? '' : '&origin=' + HOTEL[0] + ',' + HOTEL[1];
@@ -100,52 +163,41 @@ function row(p) {
   const how = r.best === 'walk' ? r.walk + ' min a piedi' : r.best === 'metro' ? (r.metro.l || 'Metro') + ' · ' + r.metro.tot + ' min' : fmtKm(r.dist);
   return '<button class="prow' + (on ? ' on' : '') + (S.pl.done[p.id] ? ' done' : '') + '" data-id="' + p.id + '" style="--c:' + ZONES[p.z].c + '"><i class="zdot"></i><span class="pb"><b>' + p.n + (S.pl.want[p.id] ? '<em class="wm">' + ICONS.star + '</em>' : '') + '</b><span>' + (p.a || '') + '</span></span><span class="ph tnum">' + how + '</span></button>';
 }
-
-export function drawLuoghi() {
-  const city = S.pl.zoom === 'city', you = inBcn(), o = origin();
-  const eyebrow = you ? 'Dalla tua posizione · ±' + Math.round(YOU.acc) + ' m' : (YOU.err || 'Distanze dall\'hotel');
-  const locBtn = '<button class="ibtn' + (YOU.busy ? ' busy' : '') + '" id="lLoc" aria-label="Dove sono">' + ICONS.locate + '</button>';
-  const map = '<div class="map">' + mapSvg() + '<div class="mapz"><button data-z="near"' + (!city ? ' class="on"' : '') + '>Vicino</button><button data-z="city"' + (city ? ' class="on"' : '') + '>Città</button></div></div>' +
-    '<div class="legend">' + Object.keys(ZONES).map(z => '<span><i style="--c:' + ZONES[z].c + '"></i>' + ZONES[z].n + '</span>').join('') + '<span><i style="--c:#7FC4E8;width:7px;height:7px"></i>Fontanelle</span><span><i style="--c:#4DA3FF"></i>Tu</span></div>';
-  const det = sel && byId(sel) ? detail(byId(sel)) : '<div class="hint">Tocca un pallino sulla mappa o un posto nell\'elenco: ti dico come arrivarci.</div>';
-  const groups = [['I tuoi posti', PLACES.filter(p => p.z === 'mine')], ['A piedi dall\'hotel', PLACES.filter(p => p.z !== 'mine' && p.near)], ['In città, in metro', PLACES.filter(p => p.z !== 'mine' && !p.near)]];
+function drawBody() {
+  const o = origin(), p = sel && byId(sel);
+  const det = p ? detail(p) : '<div class="hint">Tocca un pallino sulla mappa o un posto nell\'elenco: ti dico come arrivarci. Due dita per ruotare e inclinare la mappa.</div>';
+  const groups = [['I tuoi posti', PLACES.filter(x => x.z === 'mine')], ['A piedi dall\'hotel', PLACES.filter(x => x.z !== 'mine' && x.near)], ['In città, in metro', PLACES.filter(x => x.z !== 'mine' && !x.near)]];
   const chips = '<div class="chips lfil">' + [['all', 'Tutti'], ['want', ICONS.star + 'Da vedere'], ['done', ICONS.check + 'Fatti']].map(f => '<button class="chip' + (filter === f[0] ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>').join('') + '</div>';
   const list = groups.map(g => {
-    let its = g[1]; if (filter === 'want') its = its.filter(p => S.pl.want[p.id]); if (filter === 'done') its = its.filter(p => S.pl.done[p.id]); if (!its.length) return '';
+    let its = g[1]; if (filter === 'want') its = its.filter(x => S.pl.want[x.id]); if (filter === 'done') its = its.filter(x => S.pl.done[x.id]); if (!its.length) return '';
     its = its.slice().sort((a, b) => hav(o, a.p) - hav(o, b.p));
     return '<div class="sec"><div class="sh"><span class="eyebrow">' + g[0] + '</span><small>' + its.length + '</small></div>' + its.map(row).join('') + '</div>';
   }).join('') || '<div class="hint">Niente qui: segna i posti con la stella o con la spunta.</div>';
-  $('#pLuoghi').innerHTML = header(eyebrow, 'Luoghi', { gear: true, extra: locBtn }) + map + det + chips + list + '<div class="about">Tempi stimati. Orari indicativi, verifica prima. Dati da OpenStreetMap.</div>';
+  $('#lBody').innerHTML = det + chips + list;
 
-  $$('#pLuoghi .bcn .pt, #pLuoghi .bcn .hpin').forEach(g => g.addEventListener('click', () => select(g.dataset.id, false)));
-  $$('#pLuoghi .prow').forEach(b => b.onclick = () => select(b.dataset.id, true));
-  $$('#pLuoghi .mapz button').forEach(b => b.onclick = () => { if (S.pl.zoom !== b.dataset.z) { S.pl.zoom = b.dataset.z; save(); sfx('tick'); drawLuoghi(); } });
-  $('#lLoc').onclick = () => { sfx('tick'); locate(true); };
-  $$('#pLuoghi .lfil .chip').forEach(b => b.onclick = () => { filter = b.dataset.f; sfx('tick'); drawLuoghi(); });
-  const w = $('#lWant'); if (w) w.onclick = () => { if (S.pl.want[sel]) delete S.pl.want[sel]; else S.pl.want[sel] = true; save(); sfx(S.pl.want[sel] ? 'check' : 'uncheck'); drawLuoghi(); };
-  const d = $('#lDone'); if (d) d.onclick = () => { if (S.pl.done[sel]) delete S.pl.done[sel]; else S.pl.done[sel] = true; save(); sfx(S.pl.done[sel] ? 'check' : 'uncheck'); drawLuoghi(); };
+  $$('#lBody .prow').forEach(b => b.onclick = () => select(b.dataset.id, true));
+  $$('#lBody .lfil .chip').forEach(b => b.onclick = () => { filter = b.dataset.f; sfx('tick'); drawBody(); });
+  const w = $('#lWant'); if (w) w.onclick = () => { if (S.pl.want[sel]) delete S.pl.want[sel]; else S.pl.want[sel] = true; save(); sfx(S.pl.want[sel] ? 'check' : 'uncheck'); drawBody(); refreshPl(); };
+  const d = $('#lDone'); if (d) d.onclick = () => { if (S.pl.done[sel]) delete S.pl.done[sel]; else S.pl.done[sel] = true; save(); sfx(S.pl.done[sel] ? 'check' : 'uncheck'); drawBody(); refreshPl(); };
+  /* percorso a piedi reale: quando arriva, scheda e linea si aggiornano */
+  if (p && p.id !== 'hotel' || (p && p.id === 'hotel' && inBcn())) {
+    if (!walks.has(wkey(o, p)) && navigator.onLine) fetchWalk(o, p).then(() => { if (sel === p.id) { drawBody(); drawRoute(); } }).catch(() => {});
+  }
 }
-function select(id, scroll) {
-  sel = sel === id && !scroll ? null : id; sfx('tick'); drawLuoghi();
-  if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+function select(id, fromList) {
+  const same = sel === id; sel = same && !fromList ? null : id; sfx('tick');
+  drawBody(); refreshPl(); drawRoute();
+  if (fromList) { window.scrollTo({ top: 0, behavior: 'smooth' }); const p = byId(id); if (p) flyTo(p); }
 }
 
-/* ---- posizione ---- */
-export function locate(force) {
-  if (!navigator.geolocation) { if (force) toast('Posizione non disponibile'); return; }
-  if (!force && YOU.pos && Date.now() - YOU.ts < 120000) return;
-  YOU.busy = true; if (force) drawLuoghi();
-  navigator.geolocation.getCurrentPosition(p => {
-    YOU.pos = [p.coords.latitude, p.coords.longitude]; YOU.acc = p.coords.accuracy; YOU.ts = Date.now(); YOU.err = null; YOU.busy = false;
-    if (S.tab === 'luoghi') { drawLuoghi(); if (force) toast(inBcn() ? 'Posizione aggiornata' : 'Non sei a Barcellona: distanze dall\'hotel'); }
-  }, e => {
-    YOU.busy = false; YOU.err = e.code === 1 ? 'Posizione negata: distanze dall\'hotel' : 'Posizione non trovata: distanze dall\'hotel';
-    if (S.tab === 'luoghi') drawLuoghi();
-  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+export function drawLuoghi() {
+  if (!M.map) build();
+  else if (M.theme !== S.theme) { M.theme = S.theme; M.ready = false; M.map.setTerrain(null); M.map.setStyle(STYLE[S.theme]); }
+  eyebrow(); drawBody(); refreshPl(); drawRoute();
 }
 /* chiamata quando si apre la scheda */
 export function luoghiShow() {
   /* ?tab=luoghi&luogo=sagrada apre direttamente un luogo (comodo per i test) */
   if (sel === null) { const q = new URLSearchParams(location.search).get('luogo'); if (q && byId(q)) sel = q; }
-  drawLuoghi(); locate(false);
+  drawLuoghi(); if (M.map) setTimeout(() => M.map.resize(), 50); offline();
 }
