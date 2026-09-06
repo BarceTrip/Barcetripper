@@ -1,4 +1,4 @@
-/* Hotel, punti d'appoggio e coordinate usate dal radar. */
+/* Hotel, punti d'appoggio e coordinate delle tappe (usate dal meteo). */
 export const G = 'https://www.google.com/maps/dir/?api=1&destination=';
 
 export const ABBA = { name: 'Abba Sants Hotel', addr: 'Carrer Numància 32, 08029 Barcelona', tel: '+34936003100', telTxt: '+34 936 00 31 00', mail: 'abba-sants@abbahoteles.com', ref: 'BC/20CQX44UMN' };

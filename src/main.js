@@ -13,7 +13,7 @@ import { drawSos } from './ui/sos.js';
 import { applyTheme, syncSwitches, drawSettings } from './ui/settings.js';
 import { confetti } from './ui/confetti.js';
 import { notifInit, notifAsk, icsExport } from './notify.js';
-import { drawRadar, radarShow } from './radar.js';
+import { luoghiShow } from './ui/luoghi.js';
 import { drawValigia } from './ui/valigia.js';
 
 /* ---- schede ---- */
@@ -21,7 +21,7 @@ const TABS = [
   { id: 'oggi', lbl: 'Oggi', ico: ICONS.today, page: 'pOggi', draw: () => drawOggi(0) },
   { id: 'percorso', lbl: 'Percorso', ico: ICONS.route, page: 'pPercorso', draw: () => { drawPercorso(); scrollPercorsoToNow(); } },
   { id: 'spese', lbl: 'Spese', ico: ICONS.wallet, page: 'pSpese', draw: drawSpese },
-  { id: 'radar', lbl: 'Radar', ico: ICONS.radar, page: 'pRadar', draw: radarShow },
+  { id: 'luoghi', lbl: 'Luoghi', ico: ICONS.pin, page: 'pLuoghi', draw: luoghiShow },
   { id: 'sos', lbl: 'SOS', ico: ICONS.alert, page: 'pSos', draw: drawSos, cls: 'sos' },
 ];
 /* pagine senza scheda: si aprono sopra la scheda corrente e con "indietro" tornano lì */

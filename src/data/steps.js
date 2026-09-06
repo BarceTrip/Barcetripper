@@ -6,7 +6,7 @@ import { G, ABBA, RIV, KIP, P } from './places.js';
   facts  coppie [etichetta, valore]              ready  checklist "da avere in mano"
   notes  "da sapere" (warn = indice della nota da evidenziare)
   planB  cosa fare se va storto
-  geo    per il radar: {p} se si sta fermi, {from,to,arr,dest} se ci si sposta
+  geo    luogo della tappa (usato dal meteo): {p} se si sta fermi, {from,to,arr,dest} se ci si sposta
   pack   striscia Valigia in cima a Oggi: "out" alla partenza, "back" ai check-out
 */
 export const STEPS = [
@@ -33,7 +33,7 @@ export const STEPS = [
  {geo:{from:P.BCNP,to:P.ABBAP,arr:'2026-09-15T18:30',dest:'Abba Sants'},at:"2026-09-15T17:25",day:"Martedì 15 settembre",city:"Barcellona",mode:"road",time:"17:25",title:"Atterraggio a Barcellona",place:"Terminal 1 → quartiere di Sants",det:"Aerobús A1 fino a Plaça d'Espanya, poi metro L3 · ~45 min",nav:G+encodeURIComponent(ABBA.addr)+"&travelmode=transit",
   ready:["Carta o contanti per l'Aerobús, circa 7-8 €","Indirizzo dell'hotel per il taxi"],
   notes:["Aerobús A1: fermata fuori dagli arrivi del T1, parte ogni 5-10 minuti, 35 minuti fino a Plaça d'Espanya.","Da Plaça d'Espanya metro L3 direzione Zona Universitària: due fermate, scendi a Sants Estació.","Taxi diretto circa 35 €: dì \"Carrer Numància 32\".","Stessa ora dell'Italia: non toccare l'orologio."]},
- {geo:{p:P.ABBAP,freeAfterH:6,freeLabel:'Abba Sants',freeSub:"Giorni liberi a Barcellona: distanza dall'hotel, nessun giudizio"},at:"2026-09-15T18:30",day:"Martedì 15 settembre",city:"Barcellona",mode:"stay",time:"18:30",title:"Check-in Abba Sants",place:"Carrer de Numància 32",det:"Prenotazione BC/20CQX44UMN · 805,03 € da pagare in hotel · reception 24 ore",addr:ABBA.addr,tel:ABBA.tel,telTxt:ABBA.telTxt,nav:G+encodeURIComponent(ABBA.addr)+"&travelmode=walking",
+ {geo:{p:P.ABBAP},at:"2026-09-15T18:30",day:"Martedì 15 settembre",city:"Barcellona",mode:"stay",time:"18:30",title:"Check-in Abba Sants",place:"Carrer de Numància 32",det:"Prenotazione BC/20CQX44UMN · 805,03 € da pagare in hotel · reception 24 ore",addr:ABBA.addr,tel:ABBA.tel,telTxt:ABBA.telTxt,nav:G+encodeURIComponent(ABBA.addr)+"&travelmode=walking",
   facts:[["Prenotazione","BC/20CQX44UMN"],["Notti","4"],["Check-out","19 set"],["Cancellabile fino","15 set"]],ready:["Documento","Codice prenotazione BC/20CQX44UMN","Carta per pagare in hotel e per la tassa di soggiorno"],
   notes:["Prenotato direttamente sul sito Abba: paghi qui 805,03 € più la tassa di soggiorno, circa 34 €.","Inclusi: bottiglia d'acqua e welcome drink.","Chiedi una camera lato cortile: le stanze su strada sono rumorose.","Verifica che sia la matrimoniale e non i due letti singoli.","Colazione non inclusa, ma è la cosa più lodata dell'hotel: se la vuoi, si aggiunge al banco."]},
  {geo:{p:P.ABBAP},at:null,days:['2026-09-16','2026-09-17','2026-09-18'],day:"Da mercoledì 16 a venerdì 18",city:"Barcellona",mode:"free",time:"—",title:"Tre giorni pieni a Barcellona",place:"Nessun vincolo di orario",det:"16, 17 e 18 settembre · metro Sants Estació a 300 m",

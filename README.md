@@ -42,22 +42,27 @@ src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
 src/audio/sfx.js      effetti sonori
 src/audio/music.js    rumba catalana generativa
 src/notify.js         avvisi 30 minuti prima + export ICS
-src/radar.js          confronto posizione GPS / posizione prevista
+src/ui/luoghi.js      pagina Luoghi (mappa SVG, percorsi a piedi o in metro)
+src/data/luoghi.js    luoghi, fontanelle, linee metro, geometria della mappa
 src/weather.js        meteo per tappa (Open-Meteo) e icone meteo vettoriali
 scripts/icons.py      genera le icone PNG
 ```
 
 ## Aggiungere una tappa
 
-Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cronologico. Il campo `geo` dice al radar dove dovresti essere: `{p: P.LUOGO}` se sei fermo, `{from, to, arr, dest}` se ti stai spostando. Le coordinate nuove vanno in `places.js`. `pack: "out"` (partenza) o `pack: "back"` (check-out) fa comparire in cima a Oggi la striscia della valigia.
+Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cronologico. Il campo `geo` dice dove sei in quella tappa (serve al meteo): `{p: P.LUOGO}` se sei fermo, `{from, to, arr, dest}` se ti stai spostando. Le coordinate nuove vanno in `places.js`. `pack: "out"` (partenza) o `pack: "back"` (check-out) fa comparire in cima a Oggi la striscia della valigia.
 
 ## Interfaccia
 
-Cinque schede in basso: Oggi, Percorso, Spese, Radar, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
+Cinque schede in basso: Oggi, Percorso, Spese, Luoghi, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
 
 ## Valigia
 
 Tessere spuntabili come quelle di Oggi, divise per categoria. Gli oggetti predefiniti stanno in `src/data/valigia.js`; quelli aggiunti dall'app, quelli tolti con "Togli oggetti" e le spunte restano salvati sul telefono. Il selettore Andata/Ritorno azzera le spunte per rifare la valigia al ritorno senza dimenticare nulla: in Ritorno compare anche la categoria "In camera, prima di uscire". La striscia in cima a Oggi appare alla partenza e ai due check-out; dalle impostazioni la pagina si apre sempre. Il bagaglio è solo l'oggetto personale sotto il sedile, 40×30×20 cm, su entrambi i voli.
+
+## Luoghi
+
+Mappa stilizzata di Barcellona disegnata in SVG, quindi anche offline, con l'hotel al centro: due zoom (Vicino, 4 km; Città, 12 km), mare, Montjuïc, Collserola, le vie principali, le linee L3 e L5, le fontanelle pubbliche entro 1,4 km (OpenStreetMap) e il tuo punto GPS. I luoghi stanno in `src/data/luoghi.js`: i tuoi posti, quelli a piedi dall'hotel e quelli in città con la metro da Sants già scritta. Toccando un luogo l'app stima il modo più comodo per arrivarci da dove sei (a piedi, in metro da Sants, o con i mezzi) e apre Google Maps con le indicazioni. Stella per "da vedere", spunta per "fatto".
 
 ## Meteo
 
@@ -67,4 +72,4 @@ Nella tessera Oggi compare la previsione per il luogo e l'ora della tappa: icona
 
 - Gli avvisi 30 minuti prima funzionano solo ad app aperta. Per averli ad app chiusa usa "Salva nel calendario": apre il foglio di condivisione, scegli Calendario.
 - La musica parte al primo tocco: iOS non permette audio automatico.
-- Il radar chiede il permesso posizione alla prima apertura.
+- La scheda Luoghi chiede il permesso posizione alla prima apertura: serve solo per le distanze e il pallino "Tu".
