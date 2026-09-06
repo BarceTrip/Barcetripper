@@ -16,7 +16,7 @@ export const BAG_ITEMS = [
   { id: 'd4', t: 'Contanti in euro', c: 0 },
   { id: 'd5', t: "Biglietti e carte d'imbarco nelle app", c: 0 },
   { id: 'd6', t: 'Chiavi di casa', c: 0 },
-  { id: 'd7', t: 'Certificazione 104: copia e foto sul telefono', c: 0 },
+  { id: 'd7', t: 'Verbale 104 omissis e biglietto Domus in Documenti', c: 0 },
   { id: 't1', t: 'Caricabatterie e cavo', c: 1 },
   { id: 't2', t: 'Powerbank carico', c: 1 },
   { id: 't3', t: 'Auricolari', c: 1 },

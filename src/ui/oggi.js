@@ -46,12 +46,13 @@ export function drawOggi(dir) {
   const nowBtn = ni >= 0 && ni !== S.i ? '<button class="nowchip" id="bNow">' + ICONS.clock + 'Adesso</button>' : '';
 
   const chips = s.facts ? '<div class="chips">' + s.facts.map(f => {
-    const cp = /PNR|Posto|Carrozza|Prenotazione/.test(f[0]);
+    const cp = /PNR|Posto|Carrozza|Prenotazione|Biglietto/.test(f[0]);
     return '<span class="chip' + (cp ? ' copy' : '') + '"' + (cp ? ' data-v="' + f[1] + '" role="button"' : '') + '>' + f[0] + ' <b>' + f[1] + '</b>' + (cp ? ICONS.copy : '') + '</span>';
   }).join('') + '</div>' : '';
   let acts = '';
   if (s.tel) acts += '<a class="btn" href="tel:' + s.tel + '">' + ICONS.phone + 'Chiama</a>';
   if (s.nav) acts += '<a class="btn dk" href="' + s.nav + '" target="_blank" rel="noopener">' + ICONS.nav + 'Indicazioni</a>';
+  if (s.docs) acts += '<button class="btn dk" id="bDocs">' + ICONS.doc + 'Documenti</button>';
   acts = acts ? '<div class="acts">' + acts + '</div>' : '';
 
   const hero = '<div class="hero" style="--mode:var(--' + s.mode + ');--on:' + (ON[s.mode] || '#fff') + '"><div class="mark">' + ICONS[s.mode] + '</div>' +
@@ -82,6 +83,7 @@ export function drawOggi(dir) {
   $('#bBack').onclick = () => emit('advance', -1);
   $('#bNext').onclick = () => emit('advance', 1);
   const nb = $('#bNow'); if (nb) nb.onclick = () => { sfx('tick'); emit('goto', ni); };
+  const bd = $('#bDocs'); if (bd) bd.onclick = () => { sfx('tick'); emit('open', 'documenti'); };
   $$('#pOggi .tile').forEach(b => b.onclick = () => {
     const k = +b.dataset.k; S.checks[S.i] = S.checks[S.i] || []; S.checks[S.i][k] = !S.checks[S.i][k];
     sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(0);

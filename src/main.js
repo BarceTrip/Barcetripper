@@ -15,6 +15,7 @@ import { confetti } from './ui/confetti.js';
 import { notifInit, notifAsk, icsExport } from './notify.js';
 import { luoghiShow } from './ui/luoghi.js';
 import { drawValigia } from './ui/valigia.js';
+import { drawDocumenti } from './ui/documenti.js';
 
 /* ---- schede ---- */
 const TABS = [
@@ -25,18 +26,19 @@ const TABS = [
   { id: 'sos', lbl: 'SOS', ico: ICONS.alert, page: 'pSos', draw: drawSos, cls: 'sos' },
 ];
 /* pagine senza scheda: si aprono sopra la scheda corrente e con "indietro" tornano lì */
-const SUB = { settings: 'pSettings', valigia: 'pValigia' };
-let prevTab = 'oggi', bagFrom = 'oggi';
+const SUB = { settings: 'pSettings', valigia: 'pValigia', documenti: 'pDocumenti' };
+let prevTab = 'oggi', subFrom = 'oggi';
 
 function show(t, opts = {}) {
   if (!SUB[t]) prevTab = t;
-  if (t === 'valigia' && S.tab !== 'valigia') bagFrom = TABS.some(x => x.id === S.tab) || S.tab === 'settings' ? S.tab : 'oggi';
+  if (SUB[t] && t !== 'settings' && S.tab !== t) subFrom = TABS.some(x => x.id === S.tab) || S.tab === 'settings' ? S.tab : 'oggi';
   S.tab = t;
   $$('.page').forEach(p => p.classList.remove('on'));
   $('#' + (SUB[t] || TABS.find(x => x.id === t).page)).classList.add('on');
   $$('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
   if (t === 'settings') { syncSwitches(); }
   else if (t === 'valigia') drawValigia();
+  else if (t === 'documenti') drawDocumenti();
   else if (!opts.noDraw) TABS.find(x => x.id === t).draw();
   if (t === 'sos') sfx('sos');
   window.scrollTo({ top: 0, behavior: opts.smooth ? 'smooth' : 'auto' });
@@ -61,7 +63,7 @@ function advance(d) {
 }
 on('goto', k => goto(k, k > S.i ? 1 : k < S.i ? -1 : 0));
 on('advance', d => advance(d));
-on('open', t => show(t === 'back' ? bagFrom : t));   // la Valigia si apre da Oggi o dalle impostazioni e torna da dove è venuta
+on('open', t => show(t === 'back' ? subFrom : t));   // Valigia e Documenti si aprono da Oggi o dalle impostazioni e tornano da dove sono venute
 
 /* swipe fra le tappe nella pagina Oggi */
 let tx = 0, ty = 0, drag = false; const po = $('#pOggi');
@@ -88,6 +90,7 @@ $('#sNow').onclick = () => {
   if (k < 0) { toast('Il viaggio non è ancora iniziato'); goto(0, -1); } else goto(k, k >= S.i ? 1 : -1);
 };
 $('#sBag').onclick = () => { sfx('tick'); show('valigia'); };
+$('#sDocs').onclick = () => { sfx('tick'); show('documenti'); };
 $('#sNotif').onclick = notifAsk;
 $('#sIcs').onclick = icsExport;
 $('#sSnd').onclick = () => { S.snd = !S.snd; syncSwitches(); if (S.snd) sfx('tick'); save(); };

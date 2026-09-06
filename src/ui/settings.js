@@ -1,5 +1,6 @@
 /* Pagina "Impostazioni" e tema. */
 import { ICONS } from '../icons.js';
+import { STEPS } from '../data/steps.js';
 import { S } from '../state.js';
 import { $, header } from './dom.js';
 import { musicOn } from '../audio/music.js';
@@ -24,8 +25,9 @@ export function drawSettings() {
   $('#pSettings').innerHTML = header('Preferenze', 'Impostazioni', { back: 'bSetBack' }) +
     row('sNow', ICONS.clock, "Vai all'ora attuale", [null, 'Salta alla tappa giusta per adesso']) +
     row('sBag', ICONS.bag, 'Valigia', [null, 'Cosa mettere in borsa, andata e ritorno']) +
+    row('sDocs', ICONS.doc, 'Documenti', [null, 'Biglietti e verbali, salvati solo sul telefono']) +
     row('sNotif', ICONS.bell, 'Avvisi 30 minuti prima', ['notifSub', 'Non attivi'], 'swNotif') +
-    row('sIcs', ICONS.cal, 'Salva nel calendario', [null, '22 eventi con avviso, funziona ad app chiusa']) +
+    row('sIcs', ICONS.cal, 'Salva nel calendario', [null, STEPS.filter(s => s.at).length + ' eventi con avviso, funziona ad app chiusa']) +
     '<div class="sec"><div class="sh"><span class="eyebrow">Aspetto e suoni</span></div>' +
     row('sTheme', ICONS.sunI, '<span id="themeLbl">Tema scuro</span>', null, 'swTheme') +
     row('sSnd', ICONS.sound, 'Suoni', null, 'swSnd') +

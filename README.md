@@ -37,6 +37,7 @@ src/ui/spese.js       pagina Spese
 src/ui/sos.js         pagina Emergenza
 src/ui/settings.js    pagina Impostazioni e tema
 src/ui/valigia.js     pagina Valigia (tessere spuntabili, andata e ritorno)
+src/ui/documenti.js   pagina Documenti (file salvati solo sul telefono, IndexedDB)
 src/ui/confetti.js    coriandoli a fine viaggio
 src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
 src/audio/sfx.js      effetti sonori
@@ -64,6 +65,10 @@ Tessere spuntabili come quelle di Oggi, divise per categoria. Gli oggetti predef
 
 Mappa 3D interattiva con l'hotel al centro: MapLibre GL con le mappe vettoriali di OpenFreeMap (gratuite, senza chiave), rilievo del terreno dagli AWS Terrain Tiles ed edifici estrusi. Pinch per zoomare, due dita per ruotare e inclinare, tasto 3D/2D e tasto per tornare all'hotel. Sopra ci sono i tuoi posti, i luoghi da vedere e le fontanelle pubbliche entro 1,4 km (OpenStreetMap), più il tuo punto GPS con il controllo di MapLibre. I luoghi stanno in `src/data/luoghi.js`. Toccando un luogo l'app stima il modo più comodo per arrivarci da dove sei (a piedi, in metro da Sants, o con i mezzi), scarica il percorso pedonale reale da OSRM e lo disegna, e apre Google Maps con le indicazioni. Stella per "da vedere", spunta per "fatto". La mappa ha bisogno della rete: le tessere già viste restano in cache un mese, l'elenco e le stime funzionano anche offline.
 
+## Documenti
+
+Biglietti, carte d'imbarco, verbali: si aggiungono dal telefono (PDF o immagini) e restano in IndexedDB sul dispositivo, senza passare da nessun server. Si aprono a tutto schermo anche senza rete e si possono condividere con il foglio di condivisione. Nessun documento personale va messo nel progetto: l'app è pubblicata, tutto ciò che sta in `dist/` è scaricabile da chiunque. Su iPhone i dati restano finché l'app è sulla schermata Home. La pagina si apre dalle impostazioni e dal tasto "Documenti" nelle tappe che lo prevedono (`docs: true`).
+
 ## Meteo
 
 Nella tessera Oggi compare la previsione per il luogo e l'ora della tappa: icona, condizione, temperatura a quell'ora, massima e minima del giorno. Per i giorni liberi una colonna per giorno. Fonte Open-Meteo, che combina i modelli dei servizi meteo nazionali (ECMWF, DWD ICON, Météo-France AROME); orizzonte 16 giorni, una sola richiesta per tutte le località, cache locale di un'ora che vale anche offline. Il luogo usato è quello di arrivo della tappa, o dove si sta fermi.
@@ -72,4 +77,5 @@ Nella tessera Oggi compare la previsione per il luogo e l'ora della tappa: icona
 
 - Gli avvisi 30 minuti prima funzionano solo ad app aperta. Per averli ad app chiusa usa "Salva nel calendario": apre il foglio di condivisione, scegli Calendario.
 - La musica parte al primo tocco: iOS non permette audio automatico.
+- I file della sezione Documenti stanno in IndexedDB: Safari li conserva senza limiti di tempo solo per le app aggiunte alla schermata Home.
 - La scheda Luoghi chiede il permesso posizione alla prima apertura: serve solo per le distanze e il pallino "Tu".

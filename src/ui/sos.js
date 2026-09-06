@@ -11,7 +11,7 @@ const call = (num, big, sub, pri) => '<a class="call' + (pri ? ' pri' : '') + '"
 
 export function drawSos() {
   const h = curHotel();
-  const codes = [['Hotel Abba', ABBA.ref], ['Hotel Riviera', RIV.ref], ['Vueling', 'ZWV6HN'], ['Wizz Air', 'JPIMFD'], ['Trenitalia', 'SJMTUN']]
+  const codes = [['Hotel Abba', ABBA.ref], ['Hotel Riviera', RIV.ref], ['Vueling', 'ZWV6HN'], ['Wizz Air', 'JPIMFD'], ['Trenitalia', 'SJMTUN'], ['Domus Aurea', 'GPCO54KG2XQNN8NW']]
     .map(c => '<span class="chip copy" data-v="' + c[1] + '" role="button">' + c[0] + ' <b>' + c[1] + '</b>' + ICONS.copy + '</span>').join('');
   const ph = PHRASES.map(p => {
     const t = p.replace('{ADDR}', h.addr); const q = t.replace(/"/g, '&quot;');
