@@ -4,10 +4,10 @@
 import { Map as GLMap, NavigationControl, GeolocateControl, Marker, setWorkerUrl } from 'maplibre-gl';
 import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { HOTEL, SANTS, ZONES, PLACES, FOUNTAINS } from '../data/luoghi.js';
+import { HOTEL, SANTS, ZONES, PLACES, FOUNTAINS, METRO } from '../data/luoghi.js';
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
-import { $, $$, toast, header } from './dom.js';
+import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
 
 /* il worker di MapLibre viene impacchettato da Vite come modulo separato */
@@ -44,8 +44,22 @@ export function route(p) {
   const dist = w ? w.km : hav(o, p.p) * 1.28, walk = w ? w.min : walkMin(o, p.p);
   let metro = null;
   if (p.m && hav(o, SANTS) < 0.9) { const toSants = walkMin(o, SANTS); metro = { ...p.m, toSants, tot: toSants + 3 + p.m.n * 2 + (p.m.chg ? 6 : 0) + (p.m.walk || 0) }; }
+  /* per tornare in hotel da lontano: la fermata L3/L5 più comoda vicino a te, fino a Sants */
+  if (!metro && p.id === 'hotel' && you) metro = metroToSants(o);
   const best = metro && walk > 22 && metro.tot < walk - 5 ? 'metro' : !metro && walk > 35 ? 'transit' : 'walk';
   return { o, you, dist, walk, metro, best, real: !!w };
+}
+function metroToSants(o) {
+  let best = null;
+  METRO.forEach(L => {
+    const si = L.st.findIndex(s => s[0] === 'Sants Estació');
+    L.st.forEach((s, i) => {
+      if (i === si) return; const pos = [s[1], s[2]]; if (hav(o, pos) > 1.2) return;
+      const walkTo = walkMin(o, pos), n = Math.abs(i - si), dir = i < si ? L.ends[1] : L.ends[0], tot = walkTo + 3 + 2 * n + 5;
+      if (!best || tot < best.tot) best = { l: L.l, n, walk: 5, tot, txt: 'dalla fermata ' + s[0] + ', a ' + walkTo + ' min a piedi, ' + L.l + ' direzione ' + dir + ', ' + n + (n === 1 ? ' fermata' : ' fermate') + ', scendi a Sants Estació' };
+    });
+  });
+  return best;
 }
 /* percorso a piedi reale da OSRM (server FOSSGIS, profilo pedonale) */
 const wkey = (o, p) => o[0].toFixed(3) + ',' + o[1].toFixed(3) + '>' + p.id;
@@ -72,7 +86,7 @@ function initMap() {
   M.geo.on('geolocate', e => {
     YOU.pos = [e.coords.latitude, e.coords.longitude]; YOU.acc = e.coords.accuracy; YOU.err = null; eyebrow();
     /* la lista si ridisegna solo se ti sei spostato di almeno 30 m */
-    if (!YOU.drawn || hav(YOU.drawn, YOU.pos) > .03) { YOU.drawn = YOU.pos; drawBody(); drawRoute(); }
+    if (!YOU.drawn || hav(YOU.drawn, YOU.pos) > .03) { const first = !YOU.drawn; YOU.drawn = YOU.pos; drawBody(); drawRoute(); if (first && sel === 'hotel') fitSel(); }
   });
   M.geo.on('error', e => { YOU.err = e.code === 1 ? 'Posizione negata: distanze dall\'hotel' : 'Posizione non trovata: distanze dall\'hotel'; eyebrow(); });
   map.on('style.load', addData);
@@ -110,7 +124,7 @@ function addData() {
     'text-variable-anchor': ['left', 'right', 'top', 'bottom'], 'text-radial-offset': 1, 'text-justify': 'auto', 'symbol-sort-key': ['get', 'prio'] },
     paint: { 'text-color': dark ? '#F3F6F7' : '#26333A', 'text-halo-color': dark ? '#1F2A31' : '#ffffff', 'text-halo-width': 1.6 } });
   if (!M.clicks) { M.clicks = true; ['pl', 'pl-lab'].forEach(l => map.on('click', l, e => { const f = e.features && e.features[0]; if (f) select(f.properties.id, false); })); }
-  M.ready = true; drawRoute(); offline();
+  M.ready = true; drawRoute(); offline(); if (sel === 'hotel') fitSel();
 }
 const refreshPl = () => { if (M.ready) M.map.getSource('pl').setData(placesGeo()); };
 function drawRoute() {
@@ -121,18 +135,32 @@ function drawRoute() {
 }
 /* l'avviso copre la mappa solo finché lo stile non è arrivato e la rete manca (o il caricamento è fallito) */
 function offline() { const el = $('#lOff'); if (el) el.hidden = M.ready || navigator.onLine !== false; }
-function flyTo(p) { if (M.ready) M.map.flyTo({ center: lngLat(p.p), zoom: Math.max(M.map.getZoom(), 15.5), pitch: M.pitch ? 55 : 0, duration: 900 }); }
+/* inquadra origine e destinazione (e il percorso reale, se è già arrivato) così il tratteggio si vede tutto */
+function fitSel() {
+  const p = sel && byId(sel); if (!M.ready || !p) return;
+  const pts = [lngLat(origin()), lngLat(p.p)], w = walks.get(wkey(origin(), p)); if (w) pts.push(...w.geo.coordinates);
+  const lng = pts.map(c => c[0]), lat = pts.map(c => c[1]);
+  const cam = M.map.cameraForBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: { top: 70, bottom: 50, left: 45, right: 45 }, maxZoom: 16.5 });
+  if (cam) M.map.easeTo({ center: cam.center, zoom: cam.zoom, bearing: 0, pitch: M.pitch ? 45 : 0, duration: 900 });
+}
+/* "Portami in hotel": seleziona l'hotel, chiede la posizione se manca e inquadra il tragitto. Usato anche dal SOS. */
+export function goHotel() {
+  sel = 'hotel'; sfx('tick');
+  if (S.tab !== 'luoghi') emit('open', 'luoghi'); else { drawBody(); refreshPl(); drawRoute(); }
+  fitSel(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!inBcn() && M.geo) { toast('Cerco la tua posizione…'); try { M.geo.trigger(); } catch (e) {} }
+}
 
 /* ---- pagina ---- */
 function build() {
   $('#pLuoghi').innerHTML = header('Distanze dall\'hotel', 'Luoghi', { gear: true, extra: '<button class="ibtn" id="lLoc" aria-label="Dove sono">' + ICONS.locate + '</button>' }) +
-    '<div class="map"><div id="lCanvas"></div><div class="mapui"><button id="lPitch" class="on">3D</button><button id="lHome" aria-label="Torna all\'hotel">' + ICONS.stay + '</button></div>' +
+    '<div class="map"><div id="lCanvas"></div><div class="mapui"><button id="lPitch" class="on">3D</button><button id="lHome" aria-label="Portami in hotel">' + ICONS.stay + '</button></div>' +
     '<div class="mapoff" id="lOff" hidden><b>Serve la rete per la mappa</b><span>Elenco, stime e indicazioni funzionano lo stesso.</span></div></div>' +
     '<div class="legend">' + Object.keys(ZONES).map(z => '<span><i style="--c:' + ZONES[z].c + '"></i>' + ZONES[z].n + '</span>').join('') + '<span><i style="--c:#4DB6E8;width:7px;height:7px"></i>Fontanelle</span></div>' +
     '<div id="lBody"></div><div class="about">Mappa OpenFreeMap · rilievo AWS Terrain Tiles · percorsi a piedi OSRM · orari indicativi, verifica prima</div>';
   $('#lLoc').onclick = () => { sfx('tick'); if (M.geo) M.geo.trigger(); };
   $('#lPitch').onclick = () => { M.pitch = !M.pitch; sfx('tick'); $('#lPitch').classList.toggle('on', M.pitch); if (M.map) M.map.easeTo({ pitch: M.pitch ? 55 : 0, duration: 600 }); };
-  $('#lHome').onclick = () => { sfx('tick'); if (M.map) M.map.flyTo({ center: lngLat(HOTEL), zoom: 15, pitch: M.pitch ? 55 : 0, bearing: -20, duration: 900 }); };
+  $('#lHome').onclick = goHotel;
   window.addEventListener('online', offline); window.addEventListener('offline', offline);
   initMap(); offline();
 }
@@ -141,7 +169,7 @@ function eyebrow() {
   el.textContent = inBcn() ? 'Dalla tua posizione · ±' + Math.round(YOU.acc) + ' m' : (YOU.err || (YOU.pos ? 'Non sei a Barcellona: distanze dall\'hotel' : 'Distanze dall\'hotel'));
 }
 function detail(p) {
-  const r = route(p), from = r.you ? 'dalla tua posizione' : 'dall\'hotel';
+  const r = route(p), from = r.you ? (p.id === 'hotel' ? 'dalla tua posizione all\'hotel' : 'dalla tua posizione') : 'dall\'hotel';
   let main, alt = '', ico = ICONS.road;
   if (p.id === 'hotel' && r.you && r.dist < .08) main = '<b>Sei in hotel.</b>';
   else if (p.id === 'hotel' && !r.you) main = '<b>Il punto di partenza.</b> Quando sei a Barcellona, da qui ti riporto indietro.';
@@ -156,7 +184,7 @@ function detail(p) {
     (hotel ? '' : '<button class="ibtn' + (S.pl.want[p.id] ? ' on' : '') + '" id="lWant" aria-label="Da vedere">' + ICONS.star + '</button><button class="ibtn' + (S.pl.done[p.id] ? ' ok' : '') + '" id="lDone" aria-label="Fatto">' + ICONS.check + '</button>') + '</div>' +
     '<p>' + p.d + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') +
     '<div class="rte"><span class="mi">' + ico + '</span><div>' + main + (alt ? '<small>' + alt + '</small>' : '') + '</div></div>' +
-    '<div class="acts"><a class="btn tealb" href="' + gm('walking') + '" target="_blank" rel="noopener">' + ICONS.road + 'A piedi</a><a class="btn" href="' + gm('transit') + '" target="_blank" rel="noopener">' + ICONS.rail + 'Con i mezzi</a></div></div>';
+    '<div class="acts"><a class="btn' + (r.best === 'walk' ? ' tealb' : '') + '" href="' + gm('walking') + '" target="_blank" rel="noopener">' + ICONS.road + 'A piedi</a><a class="btn' + (r.best === 'walk' ? '' : ' tealb') + '" href="' + gm('transit') + '" target="_blank" rel="noopener">' + ICONS.rail + 'Con i mezzi</a></div></div>';
 }
 function row(p) {
   const r = route(p), on = sel === p.id;
@@ -165,7 +193,8 @@ function row(p) {
 }
 function drawBody() {
   const o = origin(), p = sel && byId(sel);
-  const det = p ? detail(p) : '<div class="hint">Tocca un pallino sulla mappa o un posto nell\'elenco: ti dico come arrivarci. Due dita per ruotare e inclinare la mappa.</div>';
+  const det = (p ? detail(p) : '<div class="hint">Tocca un pallino sulla mappa o un posto nell\'elenco: ti dico come arrivarci. Due dita per ruotare e inclinare la mappa.</div>') +
+    (sel === 'hotel' ? '' : '<button class="btn tealb gohome" id="lGoHome">' + ICONS.stay + 'Portami in hotel</button>');
   const groups = [['I tuoi posti', PLACES.filter(x => x.z === 'mine')], ['A piedi dall\'hotel', PLACES.filter(x => x.z !== 'mine' && x.near)], ['In città, in metro', PLACES.filter(x => x.z !== 'mine' && !x.near)]];
   const chips = '<div class="chips lfil">' + [['all', 'Tutti'], ['want', ICONS.star + 'Da vedere'], ['done', ICONS.check + 'Fatti']].map(f => '<button class="chip' + (filter === f[0] ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>').join('') + '</div>';
   const list = groups.map(g => {
@@ -176,6 +205,7 @@ function drawBody() {
   $('#lBody').innerHTML = det + chips + list;
 
   $$('#lBody .prow').forEach(b => b.onclick = () => select(b.dataset.id, true));
+  const gh = $('#lGoHome'); if (gh) gh.onclick = goHotel;
   $$('#lBody .lfil .chip').forEach(b => b.onclick = () => { filter = b.dataset.f; sfx('tick'); drawBody(); });
   const w = $('#lWant'); if (w) w.onclick = () => { if (S.pl.want[sel]) delete S.pl.want[sel]; else S.pl.want[sel] = true; save(); sfx(S.pl.want[sel] ? 'check' : 'uncheck'); drawBody(); refreshPl(); };
   const d = $('#lDone'); if (d) d.onclick = () => { if (S.pl.done[sel]) delete S.pl.done[sel]; else S.pl.done[sel] = true; save(); sfx(S.pl.done[sel] ? 'check' : 'uncheck'); drawBody(); refreshPl(); };
@@ -187,7 +217,7 @@ function drawBody() {
 function select(id, fromList) {
   const same = sel === id; sel = same && !fromList ? null : id; sfx('tick');
   drawBody(); refreshPl(); drawRoute();
-  if (fromList) { window.scrollTo({ top: 0, behavior: 'smooth' }); const p = byId(id); if (p) flyTo(p); }
+  if (fromList) { window.scrollTo({ top: 0, behavior: 'smooth' }); fitSel(); }
 }
 
 export function drawLuoghi() {

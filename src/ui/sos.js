@@ -3,6 +3,7 @@ import { PHRASES, ABBA, RIV, curHotel } from '../data/steps.js';
 import { ICONS } from '../icons.js';
 import { $, $$, header } from './dom.js';
 import { copyTxt } from './oggi.js';
+import { goHotel } from './luoghi.js';
 
 export function showBig(txt) {
   const b = $('#bigtxt'); b.innerHTML = txt + '<small>Tocca per chiudere</small>'; b.classList.add('on'); b.onclick = () => b.classList.remove('on');
@@ -26,12 +27,13 @@ export function drawSos() {
     call('+34659790266', 'Reperibilità', 'Funzionario di turno del Consolato: feriali 18-22, weekend 9-22. Solo emergenze gravi') +
     call(h.tel, 'Hotel', h.name) + '</div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Dove alloggi adesso</span></div><div class="card hot"><b>' + h.name + '</b><div class="ad">' + h.addr + '</div><div class="hr">' +
-    '<button class="btn tealb" id="bShowAddr">' + ICONS.big + 'Mostra al tassista</button></div></div></div>' +
+    '<button class="btn tealb" id="bShowAddr">' + ICONS.big + 'Mostra al tassista</button>' + (h === ABBA ? '<button class="btn" id="bGoHotel">' + ICONS.nav + 'Portami in hotel</button>' : '') + '</div></div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">I tuoi codici</span><small>tocca per copiare</small></div><div class="chips">' + codes + '</div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Frasi pronte</span></div>' + ph + '</div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Se ti rubano qualcosa</span></div><div class="note">Denuncia ai Mossos entro 24 ore: senza, l\'assicurazione non paga.</div><div class="note">Blocca subito la carta dall\'app Revolut e la SIM dal tuo operatore.</div><div class="note">Segna l\'IMEI del telefono: lo trovi sulla scatola o nella fattura salvata sul cloud.</div></div>';
 
   $('#bShowAddr').onclick = () => showBig(h.name + '<br>' + h.addr);
+  const gh = $('#bGoHotel'); if (gh) gh.onclick = goHotel;
   $$('#pSos .chip.copy').forEach(f => f.onclick = () => copyTxt(f.dataset.v));
   $$('#pSos [data-copy]').forEach(b => b.onclick = () => copyTxt(b.dataset.copy));
   $$('#pSos [data-big]').forEach(b => b.onclick = () => showBig(b.dataset.big));
