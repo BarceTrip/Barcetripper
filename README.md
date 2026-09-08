@@ -77,5 +77,7 @@ Nella tessera Oggi compare la previsione per il luogo e l'ora della tappa: icona
 
 - Gli avvisi 30 minuti prima funzionano solo ad app aperta. Per averli ad app chiusa usa "Salva nel calendario": apre il foglio di condivisione, scegli Calendario.
 - La musica parte al primo tocco: iOS non permette audio automatico.
+- Gli importi si scrivono con la virgola: il campo è di testo con tastiera numerica, perché un campo `type=number` scarta la virgola della tastiera italiana.
+- Gli avvisi passano dal service worker (`registration.showNotification`): su iPhone il costruttore `Notification` non esiste, nemmeno in app installata. Una tappa resta segnata come avvisata solo se l'avviso è comparso davvero.
 - I file della sezione Documenti stanno in IndexedDB: Safari li conserva senza limiti di tempo solo per le app aggiunte alla schermata Home.
 - La scheda Luoghi chiede il permesso posizione alla prima apertura: serve solo per le distanze e il pallino "Tu".

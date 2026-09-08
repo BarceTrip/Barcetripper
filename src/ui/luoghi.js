@@ -20,7 +20,8 @@ const EMPTY = { type: 'FeatureCollection', features: [] };
 const YOU = { pos: null, acc: null, err: null, drawn: null };
 const M = { map: null, geo: null, theme: null, ready: false, pitch: true };
 let sel = null, filter = 'all';
-const walks = new Map();   // percorsi a piedi reali già scaricati
+const walks = new Map();   // percorso a piedi reale per luogo: { o, km, min, geo }
+const NEAR = 0.15;         // km: sotto questa distanza il percorso salvato vale ancora
 const HP = { id: 'hotel', n: 'Abba Sants', z: 'sants', p: HOTEL, a: 'Carrer de Numància 32', d: 'Il tuo hotel: metro Sants Estació a 300 m, reception 24 ore, deposito bagagli gratuito.', near: true, big: true };
 const byId = id => id === 'hotel' ? HP : PLACES.find(p => p.id === id);
 
@@ -39,8 +40,9 @@ const lngLat = p => [p[1], p[0]];
 
 /* Il modo più comodo per arrivare a p: a piedi (con il percorso reale se è già arrivato, altrimenti la stima),
    in metro da Sants (2 min a fermata, 3 di attesa, 6 per un cambio) oppure "con i mezzi" quando sei lontano da Sants. */
+const walkOf = (o, p) => { const w = walks.get(p.id); return w && hav(o, w.o) < NEAR ? w : null; };
 export function route(p) {
-  const o = origin(), you = inBcn(), w = walks.get(wkey(o, p));
+  const o = origin(), you = inBcn(), w = walkOf(o, p);
   const dist = w ? w.km : hav(o, p.p) * 1.28, walk = w ? w.min : walkMin(o, p.p);
   let metro = null;
   if (p.m && hav(o, SANTS) < 0.9) { const toSants = walkMin(o, SANTS); metro = { ...p.m, toSants, tot: toSants + 3 + p.m.n * 2 + (p.m.chg ? 6 : 0) + (p.m.walk || 0) }; }
@@ -62,14 +64,13 @@ function metroToSants(o) {
   return best;
 }
 /* percorso a piedi reale da OSRM (server FOSSGIS, profilo pedonale) */
-const wkey = (o, p) => o[0].toFixed(3) + ',' + o[1].toFixed(3) + '>' + p.id;
 async function fetchWalk(o, p) {
-  const k = wkey(o, p); if (walks.has(k)) return walks.get(k);
+  const have = walkOf(o, p); if (have) return have;
   const r = await fetch(OSRM + o[1] + ',' + o[0] + ';' + p.p[1] + ',' + p.p[0] + '?overview=full&geometries=geojson');
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json(); const rt = j.routes && j.routes[0]; if (j.code !== 'Ok' || !rt) throw new Error('no route');
-  const v = { km: rt.distance / 1000, min: Math.max(1, Math.round(rt.duration / 60)), geo: rt.geometry };
-  walks.set(k, v); return v;
+  const v = { o, km: rt.distance / 1000, min: Math.max(1, Math.round(rt.duration / 60)), geo: rt.geometry };
+  walks.set(p.id, v); return v;
 }
 
 /* ---- mappa ---- */
@@ -83,6 +84,8 @@ function initMap() {
   map.addControl(new NavigationControl({ visualizePitch: true }), 'top-right');
   M.geo = new GeolocateControl({ positionOptions: { enableHighAccuracy: true, timeout: 12000 }, trackUserLocation: true, showAccuracyCircle: true, fitBoundsOptions: { maxZoom: 16 } });
   map.addControl(M.geo, 'top-right');
+  M.geo.on('trackuserlocationstart', () => { M.tracking = true; });
+  M.geo.on('trackuserlocationend', () => { M.tracking = false; });
   M.geo.on('geolocate', e => {
     YOU.pos = [e.coords.latitude, e.coords.longitude]; YOU.acc = e.coords.accuracy; YOU.err = null; eyebrow();
     /* la lista si ridisegna solo se ti sei spostato di almeno 30 m */
@@ -90,7 +93,7 @@ function initMap() {
   });
   M.geo.on('error', e => { YOU.err = e.code === 1 ? 'Posizione negata: distanze dall\'hotel' : 'Posizione non trovata: distanze dall\'hotel'; eyebrow(); });
   map.on('style.load', addData);
-  map.on('load', () => { try { M.geo.trigger(); } catch (e) {} });
+  map.on('load', () => { if (S.tab === 'luoghi') geoOn(); });
   map.on('error', e => { console.warn('Mappa:', e && e.error ? e.error.message || e.error : e); if (!M.ready) { const el = $('#lOff'); if (el) el.hidden = false; } });
   /* lo spillo dell'hotel */
   const el = document.createElement('button'); el.className = 'hpin'; el.setAttribute('aria-label', 'Abba Sants');
@@ -130,7 +133,7 @@ const refreshPl = () => { if (M.ready) M.map.getSource('pl').setData(placesGeo()
 function drawRoute() {
   if (!M.ready) return;
   const p = sel && byId(sel); if (!p) { M.map.getSource('rt').setData(EMPTY); return; }
-  const o = origin(), w = walks.get(wkey(o, p));
+  const o = origin(), w = walkOf(o, p);
   M.map.getSource('rt').setData({ type: 'Feature', geometry: w ? w.geo : { type: 'LineString', coordinates: [lngLat(o), lngLat(p.p)] }, properties: {} });
 }
 /* l'avviso copre la mappa solo finché lo stile non è arrivato e la rete manca (o il caricamento è fallito) */
@@ -138,7 +141,7 @@ function offline() { const el = $('#lOff'); if (el) el.hidden = M.ready || navig
 /* inquadra origine e destinazione (e il percorso reale, se è già arrivato) così il tratteggio si vede tutto */
 function fitSel() {
   const p = sel && byId(sel); if (!M.ready || !p) return;
-  const pts = [lngLat(origin()), lngLat(p.p)], w = walks.get(wkey(origin(), p)); if (w) pts.push(...w.geo.coordinates);
+  const pts = [lngLat(origin()), lngLat(p.p)], w = walkOf(origin(), p); if (w) pts.push(...w.geo.coordinates);
   const lng = pts.map(c => c[0]), lat = pts.map(c => c[1]);
   const cam = M.map.cameraForBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: { top: 70, bottom: 50, left: 45, right: 45 }, maxZoom: 16.5 });
   if (cam) M.map.easeTo({ center: cam.center, zoom: cam.zoom, bearing: 0, pitch: M.pitch ? 45 : 0, duration: 900 });
@@ -148,7 +151,7 @@ export function goHotel() {
   sel = 'hotel'; sfx('tick');
   if (S.tab !== 'luoghi') emit('open', 'luoghi'); else { drawBody(); refreshPl(); drawRoute(); }
   fitSel(); window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (!inBcn() && M.geo) { toast('Cerco la tua posizione…'); try { M.geo.trigger(); } catch (e) {} }
+  if (!inBcn() && !M.tracking) { toast('Cerco la tua posizione…'); geoOn(); }
 }
 
 /* ---- pagina ---- */
@@ -158,7 +161,7 @@ function build() {
     '<div class="mapoff" id="lOff" hidden><b>Serve la rete per la mappa</b><span>Elenco, stime e indicazioni funzionano lo stesso.</span></div></div>' +
     '<div class="legend">' + Object.keys(ZONES).map(z => '<span><i style="--c:' + ZONES[z].c + '"></i>' + ZONES[z].n + '</span>').join('') + '<span><i style="--c:#4DB6E8;width:7px;height:7px"></i>Fontanelle</span></div>' +
     '<div id="lBody"></div><div class="about">Mappa OpenFreeMap · rilievo AWS Terrain Tiles · percorsi a piedi OSRM · orari indicativi, verifica prima</div>';
-  $('#lLoc').onclick = () => { sfx('tick'); if (M.geo) M.geo.trigger(); };
+  $('#lLoc').onclick = () => { sfx('tick'); M.tracking ? luoghiPause() : geoOn(); };
   $('#lPitch').onclick = () => { M.pitch = !M.pitch; sfx('tick'); $('#lPitch').classList.toggle('on', M.pitch); if (M.map) M.map.easeTo({ pitch: M.pitch ? 55 : 0, duration: 600 }); };
   $('#lHome').onclick = goHotel;
   window.addEventListener('online', offline); window.addEventListener('offline', offline);
@@ -189,7 +192,7 @@ function detail(p) {
 function row(p) {
   const r = route(p), on = sel === p.id;
   const how = r.best === 'walk' ? r.walk + ' min a piedi' : r.best === 'metro' ? (r.metro.l || 'Metro') + ' · ' + r.metro.tot + ' min' : fmtKm(r.dist);
-  return '<button class="prow' + (on ? ' on' : '') + (S.pl.done[p.id] ? ' done' : '') + '" data-id="' + p.id + '" style="--c:' + ZONES[p.z].c + '"><i class="zdot"></i><span class="pb"><b>' + p.n + (S.pl.want[p.id] ? '<em class="wm">' + ICONS.star + '</em>' : '') + '</b><span>' + (p.a || '') + '</span></span><span class="ph tnum">' + how + '</span></button>';
+  return '<button class="prow' + (on ? ' on' : '') + (S.pl.done[p.id] ? ' done' : '') + '" data-id="' + p.id + '" style="--c:' + ZONES[p.z].c + '"><i class="zdot"></i><span class="pb"><b>' + p.n + (S.pl.want[p.id] ? '<em class="wm">' + ICONS.star + '</em>' : '') + '</b><span>' + (p.a || '') + '</span></span><span class="pht tnum">' + how + '</span></button>';
 }
 function drawBody() {
   const o = origin(), p = sel && byId(sel);
@@ -211,7 +214,7 @@ function drawBody() {
   const d = $('#lDone'); if (d) d.onclick = () => { if (S.pl.done[sel]) delete S.pl.done[sel]; else S.pl.done[sel] = true; save(); sfx(S.pl.done[sel] ? 'check' : 'uncheck'); drawBody(); refreshPl(); };
   /* percorso a piedi reale: quando arriva, scheda e linea si aggiornano */
   if (p && p.id !== 'hotel' || (p && p.id === 'hotel' && inBcn())) {
-    if (!walks.has(wkey(o, p)) && navigator.onLine) fetchWalk(o, p).then(() => { if (sel === p.id) { drawBody(); drawRoute(); } }).catch(() => {});
+    if (!walkOf(o, p) && navigator.onLine) fetchWalk(o, p).then(() => { if (sel === p.id) { drawBody(); drawRoute(); } }).catch(() => {});
   }
 }
 function select(id, fromList) {
@@ -225,9 +228,13 @@ export function drawLuoghi() {
   else if (M.theme !== S.theme) { M.theme = S.theme; M.ready = false; M.map.setTerrain(null); M.map.setStyle(STYLE[S.theme]); }
   eyebrow(); drawBody(); refreshPl(); drawRoute();
 }
+/* il GPS resta acceso solo mentre guardi i Luoghi */
+export function luoghiPause() { if (M.geo && M.tracking) { try { M.geo.trigger(); } catch (e) {} } }
+const geoOn = () => { if (!M.geo) return; try { M.ready ? M.geo.trigger() : M.map.once('load', () => M.geo.trigger()); } catch (e) {} };
+
 /* chiamata quando si apre la scheda */
 export function luoghiShow() {
   /* ?tab=luoghi&luogo=sagrada apre direttamente un luogo (comodo per i test) */
   if (sel === null) { const q = new URLSearchParams(location.search).get('luogo'); if (q && byId(q)) sel = q; }
-  drawLuoghi(); if (M.map) setTimeout(() => M.map.resize(), 50); offline();
+  drawLuoghi(); if (M.map) setTimeout(() => M.map.resize(), 50); offline(); if (!M.tracking) geoOn();
 }

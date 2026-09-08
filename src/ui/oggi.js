@@ -7,7 +7,8 @@ import { sfx } from '../audio/sfx.js';
 import { weatherFor, WX_ICONS, deg } from '../weather.js';
 import { bagStrip, bagStripBind } from './valigia.js';
 
-export const codeTag = s => s.code ? '<span class="code">' + s.code + '</span>' : '';
+export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export const codeTag = s => s.code ? '<span class="code">' + esc(s.code) + '</span>' : '';
 const ON = { air: '#26333A' };  // colore testo sulla tessera gialla
 
 export function copyTxt(v) {
@@ -18,7 +19,11 @@ export function copyTxt(v) {
 /* indice della tappa "giusta per adesso", o -1 se il viaggio non è iniziato */
 export function nowIndex() {
   const now = Date.now(); let best = -1;
-  STEPS.forEach((s, k) => { if (s.at && Date.parse(s.at) <= now) best = k; });
+  STEPS.forEach((s, k) => {
+    /* i giorni liberi non hanno orario: valgono dalla mezzanotte del primo giorno */
+    const t = s.at ? Date.parse(s.at) : (s.days && s.days.length ? Date.parse(s.days[0] + 'T00:00') : NaN);
+    if (!isNaN(t) && t <= now) best = k;
+  });
   return best;
 }
 function fmtDelta(ms) {
@@ -48,7 +53,7 @@ export function drawOggi(dir) {
   /* i chip scorrono in un nastro lento e continuo se non entrano nella tessera (vedi marquee) */
   const chips = s.facts ? '<div class="mq" id="mq"><div class="mq-track" id="mqTrack"><span class="mq-set">' + s.facts.map(f => {
     const cp = /PNR|Posto|Carrozza|Prenotazione|Biglietto/.test(f[0]);
-    return '<span class="chip' + (cp ? ' copy' : '') + '"' + (cp ? ' data-v="' + f[1] + '" role="button"' : '') + '>' + f[0] + ' <b>' + f[1] + '</b>' + (cp ? ICONS.copy : '') + '</span>';
+    return '<span class="chip' + (cp ? ' copy' : '') + '"' + (cp ? ' data-v="' + esc(f[1]) + '" role="button"' : '') + '>' + esc(f[0]) + ' <b>' + esc(f[1]) + '</b>' + (cp ? ICONS.copy : '') + '</span>';
   }).join('') + '</span></div></div>' : '';
   let acts = '';
   if (s.tel) acts += '<a class="btn" href="tel:' + s.tel + '">' + ICONS.phone + 'Chiama</a>';
@@ -93,10 +98,12 @@ export function drawOggi(dir) {
 }
 
 /* nastro dei chip: parte solo se i chip non entrano; 26 px al secondo, si ferma mentre lo tieni premuto */
-function marquee() {
-  const t = $('#mqTrack'), box = $('#mq'); if (!t || !box) return;
+export function marquee() {
+  const t = $('#mqTrack'), box = $('#mq'); if (!t || !box || t.dataset.mq) return;
   const set = t.firstElementChild, w = set.getBoundingClientRect().width;
-  if (w <= box.clientWidth - 2) return;
+  if (!box.clientWidth || !w) return;              // pagina non ancora visibile: si riprova quando lo è
+  if (w <= box.clientWidth - 2) { t.dataset.mq = 'fermo'; return; }
+  t.dataset.mq = 'scorre';
   t.appendChild(set.cloneNode(true));
   t.style.setProperty('--w', w.toFixed(1) + 'px'); t.style.animationDuration = (w / 26).toFixed(1) + 's'; t.classList.add('on');
   const hold = on => t.classList.toggle('hold', on);
@@ -113,7 +120,8 @@ function loadWx(s) {
     if (!w) { el.innerHTML = '<span class="wxp">Meteo non disponibile</span>'; return; }
     const tt = (x, when) => '<span class="wxt">' + (when ? '<small>' + when + '</small>' : '') + '<b>' + deg(x.tmax) + '</b><i>' + deg(x.tmin) + '</i></span>';
     if (w.days) {
-      el.innerHTML = '<div class="wxd">' + w.days.map((x, j) => x ? '<div class="wxc">' + WX_ICONS[x.ico] + tt(x, ['Mer 16', 'Gio 17', 'Ven 18'][j]) + '<em>' + x.label + '</em></div>' : '').join('') + '</div><span class="src">Open-Meteo</span>';
+      const dlab = d => { const v = new Date(d + 'T12:00'); return isNaN(v) ? '' : v.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }).replace('.', ''); };
+      el.innerHTML = '<div class="wxd">' + w.days.map(x => x ? '<div class="wxc">' + WX_ICONS[x.ico] + tt(x, dlab(x.date)) + '<em>' + x.label + '</em></div>' : '').join('') + '</div><span class="src">Open-Meteo</span>';
     } else {
       el.innerHTML = WX_ICONS[w.ico] + '<div class="wxb"><b>' + w.label + (w.pop >= 30 ? ' · ' + w.pop + '% pioggia' : '') + '</b><span>' + (w.temp != null ? deg(w.temp) + ' alle ' + s.time + ' · ' : '') + 'max ' + deg(w.tmax) + ' · min ' + deg(w.tmin) + '</span></div><span class="src">Open-Meteo</span>';
     }

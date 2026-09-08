@@ -8,12 +8,16 @@ import { sfx } from '../audio/sfx.js';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 const DB = 'barcetrip', STORE = 'docs';
+let dbp = null;   /* una sola connessione, riusata: aprirne una per operazione pesa su iPhone */
 function db() {
-  return new Promise((res, rej) => {
+  if (!dbp) dbp = new Promise((res, rej) => {
     const r = indexedDB.open(DB, 1);
     r.onupgradeneeded = () => r.result.createObjectStore(STORE, { keyPath: 'id' });
-    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    r.onsuccess = () => { const d = r.result; d.onversionchange = () => { d.close(); dbp = null; }; d.onclose = () => { dbp = null; }; res(d); };
+    r.onerror = () => { dbp = null; rej(r.error); };
+    r.onblocked = () => { dbp = null; rej(new Error('database occupato')); };
   });
+  return dbp;
 }
 const tx = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction(STORE, mode), q = fn(t.objectStore(STORE)); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }));
 const all = () => tx('readonly', s => s.getAll());
@@ -50,17 +54,19 @@ async function ensurePages(d) {
 }
 
 /* ---- visualizzazione a tutto schermo, con zoom ---- */
-let zoom = 1, urls = [];
+let zoom = 1, urls = [], viewSeq = 0;
 const setZoom = z => { zoom = Math.max(1, Math.min(4, z)); const p = $('#dvPages'); if (p) p.style.width = Math.round(zoom * 100) + '%'; $$('#docview [data-z]').forEach(b => b.disabled = b.dataset.z === '-' ? zoom <= 1 : zoom >= 4); };
-function closeView() { const v = $('#docview'); v.classList.remove('on'); v.innerHTML = ''; urls.forEach(u => URL.revokeObjectURL(u)); urls = []; }
+function closeView() { viewSeq++; const v = $('#docview'); v.classList.remove('on'); v.innerHTML = ''; urls.forEach(u => URL.revokeObjectURL(u)); urls = []; }
 async function view(d) {
+  const my = ++viewSeq;
   await ensurePages(d);
+  if (my !== viewSeq) return;   /* nel frattempo hai aperto un altro documento */
   const v = $('#docview'); zoom = 1;
   const pages = d.pages && d.pages.length ? d.pages : d.type && d.type.startsWith('image/') ? [d.blob] : null;
   const src = b => { const u = URL.createObjectURL(b); urls.push(u); return u; };
   v.innerHTML = '<div class="dv-top"><b>' + esc(d.name) + '</b>' + (pages ? '<span class="dz"><button data-z="-" aria-label="Riduci">−</button><button data-z="+" aria-label="Ingrandisci">+</button></span>' : '') +
     '<button class="ibtn" id="dvClose" aria-label="Chiudi">' + ICONS.x + '</button></div>' +
-    '<div class="dv-scroll" id="dvScroll">' + (pages ? '<div class="dv-pages" id="dvPages">' + pages.map(b => '<img src="' + src(b) + '" alt="">').join('') + '</div>' : '<iframe src="' + src(d.blob) + '" title="' + esc(d.name) + '"></iframe>') + '</div>';
+    '<div class="dv-scroll" id="dvScroll">' + (pages ? '<div class="dv-pages" id="dvPages">' + pages.map((b, i) => '<img src="' + src(b) + '" alt="Pagina ' + (i + 1) + '" decoding="async"' + (i ? ' loading="lazy"' : '') + '>').join('') + '</div>' : '<iframe src="' + src(d.blob) + '" title="' + esc(d.name) + '"></iframe>') + '</div>';
   v.classList.add('on');
   $('#dvClose').onclick = () => { closeView(); sfx('back'); };
   $$('#docview [data-z]').forEach(b => b.onclick = () => { sfx('tick'); setZoom(zoom + (b.dataset.z === '+' ? .5 : -.5)); });
@@ -89,13 +95,17 @@ export async function drawDocumenti() {
   $('#dAdd').onclick = () => { sfx('tick'); $('#dFile').click(); };
   $('#dFile').onchange = async e => {
     const files = [...e.target.files]; if (!files.length) return;
+    let ok = 0, ko = [];
     for (const f of files) {
-      if (f.size > 25e6) { toast('Troppo grande: ' + f.name); continue; }
+      if (f.size > 25e6) { ko.push(f.name + ' (troppo grande)'); continue; }
       const d = { id: 'd' + Date.now() + Math.random().toString(36).slice(2, 6), name: f.name, type: f.type, size: f.size, ts: Date.now(), blob: f };
       if (isPdf(d)) { toast('Preparo le pagine di ' + f.name + '…'); try { d.pages = await pdfPages(f); } catch (err) { d.pages = null; } }
-      try { await put(d); } catch (err) { toast('Non riesco a salvare ' + f.name); }
+      try { await put(d); ok++; } catch (err) { ko.push(f.name); }
     }
-    sfx('check'); toast(files.length === 1 ? 'Salvato' : 'Salvati ' + files.length + ' file'); drawDocumenti();
+    e.target.value = '';
+    if (ok) sfx('check');
+    toast(ko.length ? (ok ? 'Salvati ' + ok + ', non riesco con: ' + ko[0] : 'Non riesco a salvare ' + ko[0]) : (ok === 1 ? 'Salvato' : 'Salvati ' + ok + ' file'));
+    drawDocumenti();
   };
   $$('#pDocumenti .doc').forEach(el => {
     const d = docs.find(x => x.id === el.dataset.id);

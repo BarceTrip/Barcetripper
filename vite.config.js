@@ -9,7 +9,7 @@ export default defineConfig({
       manifest: {
         name: 'Barcellona 15-20 settembre',
         short_name: 'Barcellona',
-        description: 'Itinerario, spese, radar ed emergenze del viaggio a Barcellona.',
+        description: 'Itinerario, valigia, spese, luoghi ed emergenze del viaggio a Barcellona.',
         lang: 'it',
         start_url: '/',
         display: 'standalone',

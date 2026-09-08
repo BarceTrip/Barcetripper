@@ -3,7 +3,7 @@
   --bg:#28353D; --card:#33434C; --card2:#3E4F59; --line:rgba(255,255,255,.08);
   --ink:#F3F6F7; --ink2:#B7C3C9; --ink3:#83939B;
   --coral:#EC6B6B; --coral-2:#D95C5C; --teal:#5F9C97; --teal-2:#4E837F; --yellow:#F2C94C; --lav:#B29BDD; --slate:#7F97A4;
-  --ok:#5FBF9B; --danger:#EC6B6B; --tab:#1F2A31; --on:#fff;
+  --ok:#5FBF9B; --tab:#1F2A31; --on:#fff;
   --rail:var(--coral); --air:var(--yellow); --stay:var(--teal); --road:var(--slate); --free:var(--lav);
   --blue:#5B8DEF;
   --shadow:0 6px 18px rgba(0,0,0,.22);
@@ -19,6 +19,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html{-webkit-text-size-adjust:100%}
 html,body{background:var(--bg);color:var(--ink)}
+html{overflow-x:hidden}
+main{overflow-x:hidden}   /* la tessera che scivola non deve far scorrere la pagina di lato */
 body{font-family:ui-rounded,-apple-system,BlinkMacSystemFont,'SF Pro Rounded','Nunito',system-ui,sans-serif;font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;background:none;color:inherit;text-align:left}
@@ -165,7 +167,9 @@ svg{display:block}
 /* ============ Spese ============ */
 .bud .lbl{display:flex;justify-content:space-between;align-items:center}
 .bud .lbl button{height:32px;padding:0 11px;border-radius:9px;background:var(--card2);font-size:13px;font-weight:700;color:var(--ink2)}
-.bud .num{font-size:50px;line-height:1;font-weight:800;letter-spacing:-.04em;margin-top:10px}
+.bud .num{font-size:50px;line-height:1;font-weight:800;letter-spacing:-.04em;margin-top:10px;white-space:nowrap}
+.bud .num.sm{font-size:38px} .bud .num.xs{font-size:28px}
+.bud .sub{overflow-wrap:anywhere}
 .bud .num.over{color:var(--coral)}
 .bud .sub{font-size:14px;color:var(--ink2);margin-top:6px;font-weight:600}
 .bar{height:10px;background:var(--card2);border-radius:999px;margin-top:14px;overflow:hidden}
@@ -225,7 +229,7 @@ svg{display:block}
 .prow:active{transform:scale(.985)} .prow.on{box-shadow:inset 0 0 0 2px var(--c)}
 .prow .pb{flex:1;min-width:0} .prow .pb b{font-size:15px;font-weight:700;line-height:1.3;display:flex;align-items:center;gap:5px} .prow .pb span{display:block;font-size:12.5px;color:var(--ink3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prow .wm .ic{width:13px;height:13px;color:var(--yellow)}
-.prow .ph{font-size:13px;font-weight:700;color:var(--ink2);text-align:right;flex:none;max-width:110px;line-height:1.3}
+.prow .pht{font-size:13px;font-weight:700;color:var(--ink2);text-align:right;flex:none;max-width:110px;line-height:1.3}
 .prow.done{opacity:.55} .prow.done .pb b{text-decoration:line-through}
 
 /* ============ SOS ============ */
@@ -319,6 +323,6 @@ svg{display:block}
 .bigtxt small{display:block;font-size:15px;font-weight:600;color:#777;margin-top:24px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,8px);z-index:80;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .18s,transform .2s;background:var(--ink);color:var(--bg);box-shadow:var(--shadow)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

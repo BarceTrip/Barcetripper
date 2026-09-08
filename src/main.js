@@ -6,14 +6,14 @@ import { S, save, load } from './state.js';
 import { $, $$, on, toast } from './ui/dom.js';
 import { sfx } from './audio/sfx.js';
 import { musicStart, musicStop, musicOn, armAutoplay } from './audio/music.js';
-import { drawOggi, nowIndex } from './ui/oggi.js';
+import { drawOggi, nowIndex, marquee } from './ui/oggi.js';
 import { drawPercorso, scrollPercorsoToNow } from './ui/percorso.js';
 import { drawSpese } from './ui/spese.js';
 import { drawSos } from './ui/sos.js';
 import { applyTheme, syncSwitches, drawSettings } from './ui/settings.js';
 import { confetti } from './ui/confetti.js';
 import { notifInit, notifAsk, icsExport } from './notify.js';
-import { luoghiShow } from './ui/luoghi.js';
+import { luoghiShow, luoghiPause } from './ui/luoghi.js';
 import { drawValigia } from './ui/valigia.js';
 import { drawDocumenti } from './ui/documenti.js';
 
@@ -40,6 +40,9 @@ function show(t, opts = {}) {
   else if (t === 'valigia') drawValigia();
   else if (t === 'documenti') drawDocumenti();
   else if (!opts.noDraw) TABS.find(x => x.id === t).draw();
+  if (t === 'oggi') marquee();   // il nastro dei chip si misura solo a pagina visibile
+  if (t !== 'luoghi') luoghiPause();
+  closeOverlays();
   if (t === 'sos') sfx('sos');
   window.scrollTo({ top: 0, behavior: opts.smooth ? 'smooth' : 'auto' });
 }
@@ -47,6 +50,13 @@ $('#tabs').innerHTML = TABS.map(t => '<button role="tab" data-t="' + t.id + '"' 
 $$('#tabs button').forEach(b => b.onclick = () => { if (S.tab !== b.dataset.t) { sfx('tick'); show(b.dataset.t); } else window.scrollTo({ top: 0, behavior: 'smooth' }); });
 /* ingranaggio in ogni intestazione, delegato perché le pagine si ridisegnano */
 document.addEventListener('click', e => { if (e.target.closest('.gear')) { sfx('tick'); show('settings'); } });
+
+/* i pannelli a tutto schermo non devono sopravvivere a un cambio di pagina */
+function closeOverlays() {
+  const b = $('#bigtxt'); if (b && b.classList.contains('on')) b.classList.remove('on');
+  const d = $('#docview'); if (d && d.classList.contains('on')) { d.classList.remove('on'); d.innerHTML = ''; }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlays(); });
 
 /* ---- navigazione tappe ---- */
 /* dir: 1 la tessera entra da destra, -1 da sinistra, 0 senza animazione */

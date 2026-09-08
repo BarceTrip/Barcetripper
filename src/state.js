@@ -25,7 +25,7 @@ export function load() {
       if (d.checks) S.checks = d.checks;
       if (d.snd === false) S.snd = false;
       if (d.music === false) S.music = false;
-      if (d.theme) S.theme = d.theme;
+      if (d.theme === 'dark' || d.theme === 'light') S.theme = d.theme;
       if (d.notified) S.notified = d.notified;
       if (Array.isArray(d.exp)) S.exp = d.exp;
       if (typeof d.budget === 'number') {
