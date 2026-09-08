@@ -198,6 +198,20 @@ svg{display:block}
 .xi .xd{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink3)} .xi .xd .ic{width:16px;height:16px}
 
 /* ============ Luoghi ============ */
+.lcerca{position:relative;display:flex;align-items:center;margin-bottom:8px}
+.lcerca .lci{position:absolute;left:13px;color:var(--ink3);pointer-events:none;display:grid;place-items:center}
+.lcerca .lci .ic{width:19px;height:19px}
+.lcerca input{width:100%;height:48px;padding:0 44px;border-radius:14px;background:var(--card);border:2px solid transparent;font-size:16px;color:var(--ink);outline:none;font-family:inherit;-webkit-appearance:none}
+.lcerca input::placeholder{color:var(--ink3)}
+.lcerca input:focus{border-color:var(--teal)}
+.lcerca input::-webkit-search-cancel-button{display:none}
+.lcerca .lcx{position:absolute;right:8px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--ink2)}
+.lcerca .lcx[hidden]{display:none}
+.lcerca .lcx .ic{width:15px;height:15px}
+.lsugg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 10px;padding:0 16px}
+.lsugg::-webkit-scrollbar{display:none}
+.lsugg .chip{flex:none;height:30px;cursor:pointer}
+
 .map{position:relative;height:min(62vh,560px);min-height:360px;border-radius:18px;overflow:hidden;background:var(--card);box-shadow:var(--shadow)}
 #lCanvas{position:absolute;inset:0}
 .maplibregl-ctrl-top-right{top:6px;right:6px}

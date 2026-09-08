@@ -5,6 +5,7 @@ import { Map as GLMap, NavigationControl, GeolocateControl, Marker, setWorkerUrl
 import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { HOTEL, SANTS, ZONES, PLACES, FOUNTAINS, METRO } from '../data/luoghi.js';
+import { PAROLE, TIPI, CERCA_SUGG } from '../data/cerca.js';
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
@@ -20,10 +21,15 @@ const EMPTY = { type: 'FeatureCollection', features: [] };
 const YOU = { pos: null, acc: null, err: null, drawn: null };
 const M = { map: null, geo: null, theme: null, ready: false, pitch: true };
 let sel = null, filter = 'all';
+const CERCA = { q: '', res: [] };
+const ZT = { n: 'Trovati', c: '#F2994A' };   // colore dei risultati di ricerca
+const zona = p => ZONES[p.z] || ZT;
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+const escq = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const walks = new Map();   // percorso a piedi reale per luogo: { o, km, min, geo }
 const NEAR = 0.15;         // km: sotto questa distanza il percorso salvato vale ancora
 const HP = { id: 'hotel', n: 'Abba Sants', z: 'sants', p: HOTEL, a: 'Carrer de Numància 32', d: 'Il tuo hotel: metro Sants Estació a 300 m, reception 24 ore, deposito bagagli gratuito.', near: true, big: true };
-const byId = id => id === 'hotel' ? HP : PLACES.find(p => p.id === id);
+const byId = id => id === 'hotel' ? HP : (PLACES.find(p => p.id === id) || CERCA.res.find(p => p.id === id));
 
 export function hav(a, b) {
   const R = 6371, dLa = (b[0] - a[0]) * Math.PI / 180, dLo = (b[1] - a[1]) * Math.PI / 180, l1 = a[0] * Math.PI / 180, l2 = b[0] * Math.PI / 180;
@@ -76,7 +82,7 @@ async function fetchWalk(o, p) {
 /* ---- mappa ---- */
 function placesGeo() {
   return { type: 'FeatureCollection', features: PLACES.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(p.p) },
-    properties: { id: p.id, s: p.s || p.n, color: ZONES[p.z].c, prio: p.z === 'mine' ? 0 : p.big ? 1 : 2, want: S.pl.want[p.id] ? 1 : 0, done: S.pl.done[p.id] ? 1 : 0, sel: sel === p.id ? 1 : 0 } })) };
+    properties: { id: p.id, s: p.s || p.n, color: zona(p).c, prio: p.z === 'mine' ? 0 : p.big ? 1 : 2, want: S.pl.want[p.id] ? 1 : 0, done: S.pl.done[p.id] ? 1 : 0, sel: sel === p.id ? 1 : 0 } })) };
 }
 function initMap() {
   M.theme = S.theme;
@@ -127,9 +133,19 @@ function addData() {
     'text-variable-anchor': ['left', 'right', 'top', 'bottom'], 'text-radial-offset': 1, 'text-justify': 'auto', 'symbol-sort-key': ['get', 'prio'] },
     paint: { 'text-color': dark ? '#F3F6F7' : '#26333A', 'text-halo-color': dark ? '#1F2A31' : '#ffffff', 'text-halo-width': 1.6 } });
   if (!M.clicks) { M.clicks = true; ['pl', 'pl-lab'].forEach(l => map.on('click', l, e => { const f = e.features && e.features[0]; if (f) select(f.properties.id, false); })); }
-  M.ready = true; drawRoute(); offline(); if (sel === 'hotel') fitSel();
+  map.addSource('find', { type: 'geojson', data: EMPTY });
+  map.addLayer({ id: 'find-halo', type: 'circle', source: 'find', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 9, 17, 18], 'circle-color': '#F2994A', 'circle-opacity': .28 } });
+  map.addLayer({ id: 'find', type: 'circle', source: 'find', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 4.5, 17, 8], 'circle-color': '#F2994A', 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+  map.addLayer({ id: 'find-lab', type: 'symbol', source: 'find', minzoom: 14.5, layout: { 'text-field': ['get', 's'], 'text-font': ['Noto Sans Bold'], 'text-size': 12, 'text-variable-anchor': ['top', 'left', 'right', 'bottom'], 'text-radial-offset': 0.9, 'text-justify': 'auto' }, paint: { 'text-color': dark ? '#F3F6F7' : '#26333A', 'text-halo-color': dark ? '#1F2A31' : '#ffffff', 'text-halo-width': 1.6 } });
+  if (!M.findClicks) {
+    M.findClicks = true;
+    map.on('click', 'find', e => { const f = e.features && e.features[0]; if (f) select(f.properties.id, false); });
+    map.on('dblclick', 'find', e => { e.preventDefault(); const f = e.features && e.features[0]; if (!f) return; const p = byId(f.properties.id); if (p) { sfx('tick'); apriMaps(p); } });
+  }
+  M.ready = true; drawRoute(); refreshFind(); offline(); if (sel === 'hotel') fitSel();
 }
 const refreshPl = () => { if (M.ready) M.map.getSource('pl').setData(placesGeo()); };
+const refreshFind = () => { if (M.ready && M.map.getSource('find')) M.map.getSource('find').setData(trovatiGeo()); };
 function drawRoute() {
   if (!M.ready) return;
   const p = sel && byId(sel); if (!p) { M.map.getSource('rt').setData(EMPTY); return; }
@@ -157,11 +173,21 @@ export function goHotel() {
 /* ---- pagina ---- */
 function build() {
   $('#pLuoghi').innerHTML = header('Distanze dall\'hotel', 'Luoghi', { gear: true, extra: '<button class="ibtn" id="lLoc" aria-label="Dove sono">' + ICONS.locate + '</button>' }) +
+    '<div class="lcerca"><span class="lci">' + ICONS.search + '</span><input id="lQ" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="Cerca: bar, farmacia, bagno…" maxlength="30"><button class="lcx" id="lQx" hidden aria-label="Cancella">' + ICONS.x + '</button></div>' +
+    '<div class="lsugg">' + CERCA_SUGG.map(s => '<button class="chip" data-s="' + s + '">' + s + '</button>').join('') + '</div>' +
     '<div class="map"><div id="lCanvas"></div><div class="mapui"><button id="lPitch" class="on">3D</button><button id="lHome" aria-label="Portami in hotel">' + ICONS.stay + '</button></div>' +
     '<div class="mapoff" id="lOff" hidden><b>Serve la rete per la mappa</b><span>Elenco, stime e indicazioni funzionano lo stesso.</span></div></div>' +
     '<div class="legend">' + Object.keys(ZONES).map(z => '<span><i style="--c:' + ZONES[z].c + '"></i>' + ZONES[z].n + '</span>').join('') + '<span><i style="--c:#4DB6E8;width:7px;height:7px"></i>Fontanelle</span></div>' +
     '<div id="lBody"></div><div class="about">Mappa OpenFreeMap · rilievo AWS Terrain Tiles · percorsi a piedi OSRM · orari indicativi, verifica prima</div>';
   $('#lLoc').onclick = () => { sfx('tick'); M.tracking ? luoghiPause() : geoOn(); };
+  const q = $('#lQ'), qx = $('#lQx');
+  let tq = null;
+  const aggiorna = (avvicina) => { qx.hidden = !q.value.trim(); clearTimeout(tq); tq = setTimeout(() => eseguiCerca(q.value.trim(), avvicina), avvicina ? 0 : 220); };
+  q.addEventListener('input', () => aggiorna(false));
+  q.addEventListener('change', () => aggiorna(true));
+  q.addEventListener('keydown', e => { if (e.key === 'Enter') { q.blur(); aggiorna(true); } });
+  qx.onclick = () => { q.value = ''; qx.hidden = true; sfx('back'); eseguiCerca('', false); };
+  $$('.lsugg .chip').forEach(b => b.onclick = () => { q.value = b.dataset.s; qx.hidden = false; sfx('tick'); eseguiCerca(b.dataset.s, true); });
   $('#lPitch').onclick = () => { M.pitch = !M.pitch; sfx('tick'); $('#lPitch').classList.toggle('on', M.pitch); if (M.map) M.map.easeTo({ pitch: M.pitch ? 55 : 0, duration: 600 }); };
   $('#lHome').onclick = goHotel;
   window.addEventListener('online', offline); window.addEventListener('offline', offline);
@@ -183,21 +209,87 @@ function detail(p) {
   const gm = mode => 'https://www.google.com/maps/dir/?api=1&destination=' + dest + org + '&travelmode=' + mode;
   const chips = (p.h ? '<span class="chip">' + ICONS.clock + p.h + '</span>' : '') + (p.book ? '<span class="chip warn">Prenota prima</span>' : '') + (p.sun ? '<span class="chip">Bello al tramonto</span>' : '');
   const hotel = p.id === 'hotel';
-  return '<div class="card pdet" style="--c:' + ZONES[p.z].c + '"><div class="pdh"><i class="zdot"></i><div class="pt"><b>' + p.n + '</b><span>' + (p.a || ZONES[p.z].n) + '</span></div>' +
-    (hotel ? '' : '<button class="ibtn' + (S.pl.want[p.id] ? ' on' : '') + '" id="lWant" aria-label="Da vedere">' + ICONS.star + '</button><button class="ibtn' + (S.pl.done[p.id] ? ' ok' : '') + '" id="lDone" aria-label="Fatto">' + ICONS.check + '</button>') + '</div>' +
-    '<p>' + p.d + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') +
+  return '<div class="card pdet" style="--c:' + zona(p).c + '"><div class="pdh"><i class="zdot"></i><div class="pt"><b>' + escq(p.n) + '</b><span>' + escq(p.a || zona(p).n) + '</span></div>' +
+    (hotel || p.poi ? '' : '<button class="ibtn' + (S.pl.want[p.id] ? ' on' : '') + '" id="lWant" aria-label="Da vedere">' + ICONS.star + '</button><button class="ibtn' + (S.pl.done[p.id] ? ' ok' : '') + '" id="lDone" aria-label="Fatto">' + ICONS.check + '</button>') + '</div>' +
+    (p.d ? '<p>' + escq(p.d) + '</p>' : '') + (chips ? '<div class="chips">' + chips + '</div>' : '') +
     '<div class="rte"><span class="mi">' + ico + '</span><div>' + main + (alt ? '<small>' + alt + '</small>' : '') + '</div></div>' +
     '<div class="acts"><a class="btn' + (r.best === 'walk' ? ' tealb' : '') + '" href="' + gm('walking') + '" target="_blank" rel="noopener">' + ICONS.road + 'A piedi</a><a class="btn' + (r.best === 'walk' ? '' : ' tealb') + '" href="' + gm('transit') + '" target="_blank" rel="noopener">' + ICONS.rail + 'Con i mezzi</a></div></div>';
 }
 function row(p) {
   const r = route(p), on = sel === p.id;
   const how = r.best === 'walk' ? r.walk + ' min a piedi' : r.best === 'metro' ? (r.metro.l || 'Metro') + ' · ' + r.metro.tot + ' min' : fmtKm(r.dist);
-  return '<button class="prow' + (on ? ' on' : '') + (S.pl.done[p.id] ? ' done' : '') + '" data-id="' + p.id + '" style="--c:' + ZONES[p.z].c + '"><i class="zdot"></i><span class="pb"><b>' + p.n + (S.pl.want[p.id] ? '<em class="wm">' + ICONS.star + '</em>' : '') + '</b><span>' + (p.a || '') + '</span></span><span class="pht tnum">' + how + '</span></button>';
+  return '<button class="prow' + (on ? ' on' : '') + (S.pl.done[p.id] ? ' done' : '') + '" data-id="' + p.id + '" style="--c:' + zona(p).c + '"><i class="zdot"></i><span class="pb"><b>' + escq(p.n) + (S.pl.want[p.id] ? '<em class="wm">' + ICONS.star + '</em>' : '') + '</b><span>' + escq(p.a || '') + '</span></span><span class="pht tnum">' + how + '</span></button>';
+}
+
+/* ---- ricerca: i punti di interesse sono già dentro le mappe scaricate, quindi funziona anche offline ---- */
+function cercaPoi(q) {
+  if (!M.ready) return [];
+  const style = M.map.getStyle(), vec = Object.keys(style.sources).find(k => style.sources[k].type === 'vector');
+  if (!vec) return [];
+  let feats = [];
+  try { feats = M.map.querySourceFeatures(vec, { sourceLayer: 'poi' }); } catch (e) { return []; }
+  const nq = norm(q);
+  const voce = PAROLE.find(v => v.q.some(w => nq === w || (nq.length > 2 && w.startsWith(nq)) || (w.length > 3 && nq.startsWith(w))));
+  const classi = voce ? voce.c : [];
+  const visti = new Set(), out = [];
+  feats.forEach(f => {
+    const g = f.geometry; if (!g || g.type !== 'Point') return;
+    const pr = f.properties || {}, nome = pr['name:it'] || pr.name || pr['name:es'] || '';
+    const cls = pr.class || '', sub = pr.subclass || '';
+    if (cls === 'entrance' || sub === 'entrance' || sub === 'waste_basket') return;
+    const perClasse = classi.length && (classi.includes(cls) || classi.includes(sub));
+    /* col dizionario il nome vale solo come parola intera, così "bar" non pesca "Bargés" */
+    const nn = norm(nome);
+    const perNome = classi.length ? new RegExp('(^|[^a-z0-9])' + nq + '([^a-z0-9]|$)').test(nn) : (nq.length > 2 && nn.includes(nq));
+    if (!perClasse && !perNome) return;
+    const pos = [g.coordinates[1], g.coordinates[0]];
+    const k = norm(nome) + '@' + pos[0].toFixed(4) + ',' + pos[1].toFixed(4);
+    if (visti.has(k)) return; visti.add(k);
+    out.push({ id: 'q' + visti.size, n: nome || TIPI[sub] || TIPI[cls] || 'Punto', a: TIPI[sub] || TIPI[cls] || cls, z: 'trovato', p: pos, poi: true });
+  });
+  return out;
+}
+function cerca(q) {
+  CERCA.q = q; const nq = norm(q);
+  if (!nq) { CERCA.res = []; return; }
+  const dentro = p => norm(p.n).includes(nq) || norm(p.a).includes(nq) || norm(p.d).includes(nq) || norm(p.s).includes(nq);
+  const o = origin();
+  CERCA.res = [HP].concat(PLACES).filter(dentro).concat(cercaPoi(q)).sort((a, b) => hav(o, a.p) - hav(o, b.p)).slice(0, 40);
+}
+const trovatiGeo = () => ({ type: 'FeatureCollection', features: CERCA.res.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(p.p) }, properties: { id: p.id, s: p.n } })) });
+function apriMaps(p) {
+  const r = route(p), org = r.you ? '' : '&origin=' + HOTEL[0] + ',' + HOTEL[1];
+  window.open('https://www.google.com/maps/dir/?api=1&destination=' + p.p[0].toFixed(5) + ',' + p.p[1].toFixed(5) + org + '&travelmode=walking', '_blank', 'noopener');
+}
+/* la ricerca guarda solo i dintorni caricati: se sei lontano, la mappa si avvicina da sola */
+function eseguiCerca(q, avvicina) {
+  cerca(q); refreshFind(); drawBody();
+  if (!q) return;
+  if (avvicina && M.ready && !CERCA.res.length && M.map.getZoom() < 15.2) {
+    M.map.easeTo({ zoom: 15.6, duration: 700 });
+    M.map.once('idle', () => { cerca(q); refreshFind(); drawBody(); if (CERCA.res.length) fitTrovati(); });
+  } else if (CERCA.res.length) fitTrovati();
+}
+function fitTrovati() {
+  if (!M.ready || !CERCA.res.length) return;
+  const pts = CERCA.res.slice(0, 12).map(p => lngLat(p.p)); pts.push(lngLat(origin()));
+  const lng = pts.map(c => c[0]), lat = pts.map(c => c[1]);
+  const cam = M.map.cameraForBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: { top: 60, bottom: 50, left: 45, right: 45 }, maxZoom: 16.5 });
+  if (cam) M.map.easeTo({ center: cam.center, zoom: cam.zoom, duration: 800 });
 }
 function drawBody() {
   const o = origin(), p = sel && byId(sel);
   const det = (p ? detail(p) : '<div class="hint">Tocca un pallino sulla mappa o un posto nell\'elenco: ti dico come arrivarci. Due dita per ruotare e inclinare la mappa.</div>') +
     (sel === 'hotel' ? '' : '<button class="btn tealb gohome" id="lGoHome">' + ICONS.stay + 'Portami in hotel</button>');
+  if (CERCA.q) {
+    const n = CERCA.res.length;
+    const testa = '<div class="sec"><div class="sh"><span class="eyebrow">' + (n ? n + (n === 1 ? ' risultato' : ' risultati') : 'Nessun risultato') + ' per “' + escq(CERCA.q) + '”</span>' + (n ? '<small>due tocchi per aprirlo in Maps</small>' : '') + '</div>';
+    const corpo = n ? CERCA.res.slice(0, 14).map(row).join('') + (n > 14 ? '<div class="hint">e altri ' + (n - 14) + ', arancioni sulla mappa</div>' : '')
+      : '<div class="hint">' + (M.ready && M.map.getZoom() < 15 ? 'Avvicina la mappa alla zona che ti interessa: i posti compaiono da vicino.' : 'Prova con un\'altra parola: bar, ristorante, farmacia, supermercato, bagno, gelato.') + '</div>';
+    $('#lBody').innerHTML = det + testa + corpo + '</div>';
+    legaRighe();
+    return;
+  }
   const groups = [['I tuoi posti', PLACES.filter(x => x.z === 'mine')], ['A piedi dall\'hotel', PLACES.filter(x => x.z !== 'mine' && x.near)], ['In città, in metro', PLACES.filter(x => x.z !== 'mine' && !x.near)]];
   const chips = '<div class="chips lfil">' + [['all', 'Tutti'], ['want', ICONS.star + 'Da vedere'], ['done', ICONS.check + 'Fatti']].map(f => '<button class="chip' + (filter === f[0] ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>').join('') + '</div>';
   const list = groups.map(g => {
@@ -207,7 +299,7 @@ function drawBody() {
   }).join('') || '<div class="hint">Niente qui: segna i posti con la stella o con la spunta.</div>';
   $('#lBody').innerHTML = det + chips + list;
 
-  $$('#lBody .prow').forEach(b => b.onclick = () => select(b.dataset.id, true));
+  legaRighe();
   const gh = $('#lGoHome'); if (gh) gh.onclick = goHotel;
   $$('#lBody .lfil .chip').forEach(b => b.onclick = () => { filter = b.dataset.f; sfx('tick'); drawBody(); });
   const w = $('#lWant'); if (w) w.onclick = () => { if (S.pl.want[sel]) delete S.pl.want[sel]; else S.pl.want[sel] = true; save(); sfx(S.pl.want[sel] ? 'check' : 'uncheck'); drawBody(); refreshPl(); };
@@ -216,6 +308,15 @@ function drawBody() {
   if (p && p.id !== 'hotel' || (p && p.id === 'hotel' && inBcn())) {
     if (!walkOf(o, p) && navigator.onLine) fetchWalk(o, p).then(() => { if (sel === p.id) { drawBody(); drawRoute(); } }).catch(() => {});
   }
+}
+/* un tocco apre la scheda, due tocchi ravvicinati aprono Google Maps */
+const DUE = { t: 0, id: '' };
+function legaRighe() {
+  $$('#lBody .prow').forEach(b => b.onclick = () => {
+    const id = b.dataset.id, ora = Date.now();
+    if (id === DUE.id && ora - DUE.t < 600) { DUE.t = 0; const p = byId(id); if (p) { sfx('tick'); apriMaps(p); return; } }
+    DUE.t = ora; DUE.id = id; select(id, true);
+  });
 }
 function select(id, fromList) {
   const same = sel === id; sel = same && !fromList ? null : id; sfx('tick');
