@@ -123,12 +123,13 @@ svg{display:block}
 .wxt small{font-size:11px;font-weight:700;opacity:.8;margin-bottom:2px} .wxt b{font-size:15px;font-weight:800} .wxt i{font-style:normal;font-size:12.5px;opacity:.8;font-weight:600}
 
 /* ============ Tessere (checklist) ============ */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tile{aspect-ratio:1/1.02;border-radius:14px;background:var(--coral);color:#fff;padding:12px 10px 10px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow);transition:transform .12s,background .2s}
+/* minmax(0,1fr): una parola lunga va a capo invece di allargare le colonne oltre lo schermo */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{aspect-ratio:1/1.02;border-radius:14px;background:var(--coral);color:#fff;padding:12px 8px 10px 9px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow);transition:transform .12s,background .2s}
 .tile:active{transform:scale(.96)}
 .tile .ti{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.7);display:grid;place-items:center;align-self:flex-end}
 .tile .ti .ic{width:16px;height:16px;opacity:0}
-.tile .tt{font-size:13.5px;font-weight:700;line-height:1.25;letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.tile .tt{font-size:13.5px;font-weight:700;line-height:1.25;letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto;min-width:0}
 .tile.ok{background:var(--teal-2);box-shadow:none}
 .tile.ok .ti{background:#fff;border-color:#fff} .tile.ok .ti .ic{opacity:1;color:var(--teal-2)}
 .tile.ok .tt{opacity:.85}

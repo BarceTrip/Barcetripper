@@ -21,6 +21,8 @@ export const PLACES = [
   { id: 'suite', n: 'Suite', z: 'mine', p: [41.37895, 2.14261], a: 'Carrer de Tarragona 177, planta 2', d: 'Dietro la stazione, all\'angolo con Tarragona: cinque minuti a piedi.', near: true, big: true },
   { id: 'maison', n: 'Maison', z: 'mine', p: [41.39738, 2.15794], a: 'Passeig de Gràcia 123', d: 'In cima al Passeig de Gràcia, accanto ai Jardinets e alla Diagonal.', big: true, m: { l: 'L5', dir: 'Vall d\'Hebron', n: 3, st: 'Diagonal', walk: 4 } },
   { id: 'locker', n: 'Locker', z: 'mine', p: [41.38249, 2.13949], a: 'InPost ES-32234, Carrer de Numància 33', d: 'Il locker InPost è proprio di fronte all\'hotel, dall\'altro lato di Numància.', near: true, big: true },
+  { id: 'oxyzen', n: 'OxyZen', z: 'mine', p: [41.38222, 2.15949], a: 'Gran Via de les Corts Catalanes 532', d: 'Sulla Gran Via all\'altezza di Carrer del Comte d\'Urgell, a Sant Antoni: la metro Urgell (L1) è a cento metri.', m: { txt: 'L3 fino a Espanya (2 fermate), poi L1 direzione Fondo, 2 fermate, Urgell', n: 4, chg: true, walk: 2 } },
+  { id: 'apricots', n: 'Apricots', z: 'mine', p: [41.37880, 2.12360], a: 'Carrer d\'Arizala 74A', d: 'A Les Corts, dalle parti del Camp Nou: mezz\'ora a piedi dall\'hotel lungo Travessera de les Corts, oppure L5 fino a Collblanc.', near: true, m: { l: 'L5', dir: 'Cornellà Centre', n: 3, st: 'Collblanc', walk: 7 } },
   { id: 'inet', n: 'Internet point', s: 'Internet point', z: 'mine', p: [41.37147, 2.14489], a: 'Locutorio BCN Internet, Gran Via 280', d: 'Locutorio con postazioni internet e stampa, sulla Gran Via poco oltre Plaça d\'Espanya.', h: '9-22 · sab e dom 10-22 · martedì chiuso', near: true, big: true },
 
   /* ---- a piedi dall'hotel ---- */
