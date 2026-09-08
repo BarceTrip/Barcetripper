@@ -179,7 +179,12 @@ svg{display:block}
 .addx .fr{display:flex;gap:8px}
 .addx input{flex:1;min-width:0;height:50px;padding:0 14px;border-radius:12px;background:var(--card2);border:2px solid transparent;font-size:16px;outline:none;color:var(--ink)}
 .addx input::placeholder{color:var(--ink3)}
-.addx input.amt{font-size:22px;font-weight:800;max-width:136px}
+.amtw{position:relative;display:block;flex:none;width:140px}
+.amtw .amt{width:100%;padding-right:10px}
+.addx input.amt{font-size:22px;font-weight:800;letter-spacing:0}
+.amtw .cur{position:absolute;top:50%;transform:translateY(-50%);left:14px;font-size:20px;font-weight:800;color:var(--ink2);pointer-events:none;transition:left .08s linear}
+.amtw .cur[hidden]{display:none}
+.amtw .ghost{position:absolute;left:0;top:0;visibility:hidden;white-space:pre;font-size:22px;font-weight:800;letter-spacing:0;pointer-events:none}
 .addx input:focus{border-color:var(--teal)}
 .cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cat{height:34px;padding:0 12px;border-radius:9px;background:var(--card2);font-size:13.5px;font-weight:600;color:var(--ink2);display:inline-flex;align-items:center;gap:6px}

@@ -21,7 +21,7 @@ export function drawSpese() {
     '<div class="card bud"><div class="lbl"><span class="eyebrow">Restano</span><button id="bBud">Budget ' + eur(S.budget) + '</button></div>' +
     '<div class="num tnum' + (rem < 0 ? ' over' : '') + (eur(rem).length > 13 ? ' xs' : eur(rem).length > 10 ? ' sm' : '') + '">' + eur(rem) + '</div><div class="sub">Impegnati ' + eur(tot) + '</div>' +
     '<div class="bar"><i class="' + (rem < 0 ? 'over' : '') + '" style="width:' + pct + '%"></i></div>' + (sum ? '<div class="chips xsum">' + sum + '</div>' : '') + '</div>' +
-    '<div class="sec"><div class="sh"><span class="eyebrow">Nuova spesa</span></div><div class="card addx"><div class="fr"><input class="amt tnum" id="xAmt" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" maxlength="12"><input id="xNote" type="text" placeholder="Cos\'è" maxlength="40"></div>' +
+    '<div class="sec"><div class="sh"><span class="eyebrow">Nuova spesa</span></div><div class="card addx"><div class="fr"><input id="xNote" type="text" placeholder="Cos\'è" maxlength="40"><label class="amtw"><input class="amt tnum" id="xAmt" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" maxlength="10"><span class="cur tnum" id="xCur" hidden>€</span><span class="ghost tnum" id="xGhost" aria-hidden="true"></span></label></div>' +
     '<div class="cats">' + CATS.map((c, k) => '<button class="cat' + (k === S.cat ? ' on' : '') + '" data-k="' + k + '">' + c.i + ' ' + c.n + '</button>').join('') + '</div>' +
     '<button class="btn tealb" id="xAdd" style="width:100%;margin-top:12px">Aggiungi</button></div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Movimenti</span></div>' + list + '</div>';
@@ -41,6 +41,18 @@ export function drawSpese() {
     S.exp.push({ id: Date.now() * 1000 + Math.floor(Math.random() * 1000), amt: Math.round(a * 100) / 100, cat: S.cat, note: $('#xNote').value.trim().slice(0, 40), ts: Date.now() });
     save(); sfx('coin'); drawSpese();
   };
-  $('#xAdd').onclick = add; $('#xAmt').addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+  $('#xAdd').onclick = add;
+  /* il simbolo € sta subito dopo l'ultima cifra: un gemello invisibile misura quanto è largo il numero */
+  const amt = $('#xAmt'), cur = $('#xCur'), ghost = $('#xGhost');
+  const segui = () => {
+    const v = amt.value.replace(/[^0-9.,]/g, '').replace(/[.,]{2,}/g, ',');
+    if (v !== amt.value) amt.value = v;
+    ghost.textContent = v; cur.hidden = !v;
+    if (v) cur.style.left = Math.min(ghost.offsetWidth + 18, amt.clientWidth - 20) + 'px';
+  };
+  amt.addEventListener('input', segui);
+  amt.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+  $('#xNote').addEventListener('keydown', e => { if (e.key === 'Enter') amt.focus(); });
+  segui();
   $$('#pSpese .xd').forEach(b => b.onclick = () => { S.exp = S.exp.filter(x => x.id !== +b.dataset.id); save(); sfx('uncheck'); drawSpese(); });
 }
