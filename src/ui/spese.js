@@ -1,5 +1,6 @@
 /* Pagina "Spese". */
-import { CATS, CATEMO } from '../data/steps.js';
+import { CATS, CAT_MIGRATE } from '../data/steps.js';
+const C = k => CATS[k] || CATS[CATS.length - 1];
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header } from './dom.js';
@@ -10,9 +11,9 @@ export const eur = n => n.toLocaleString('it-IT', { minimumFractionDigits: 2, ma
 export function drawSpese() {
   const tot = S.exp.reduce((a, x) => a + x.amt, 0), rem = S.budget - tot, pct = Math.min(100, tot / S.budget * 100);
   const byCat = {}; S.exp.forEach(x => { byCat[x.cat] = (byCat[x.cat] || 0) + x.amt; });
-  const sum = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(k => '<span class="chip">' + CATEMO[k] + ' ' + CATS[k][1] + ' <b>' + eur(byCat[k]) + '</b></span>').join('');
+  const sum = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(k => '<span class="chip">' + C(k).i + ' ' + C(k).n + ' <b>' + eur(byCat[k]) + '</b></span>').join('');
   const list = S.exp.slice().sort((a, b) => b.ts - a.ts).map(x =>
-    '<div class="xi"><span class="xk">' + CATEMO[x.cat] + '</span><div class="xt"><b>' + (x.note || CATS[x.cat][1]) + '</b><span>' +
+    '<div class="xi"><span class="xk">' + C(x.cat).i + '</span><div class="xt"><b>' + (x.note || C(x.cat).n) + '</b><span>' +
     new Date(x.ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }) + '</span></div><span class="xa tnum">' + eur(x.amt) + '</span><button class="xd" data-id="' + x.id + '" aria-label="Elimina">' + ICONS.x + '</button></div>').join('');
 
   $('#pSpese').innerHTML = header(S.exp.length + ' movimenti', 'Spese', { gear: true }) +
@@ -20,7 +21,7 @@ export function drawSpese() {
     '<div class="num tnum' + (rem < 0 ? ' over' : '') + '">' + eur(rem) + '</div><div class="sub">Impegnati ' + eur(tot) + '</div>' +
     '<div class="bar"><i class="' + (rem < 0 ? 'over' : '') + '" style="width:' + pct + '%"></i></div>' + (sum ? '<div class="chips xsum">' + sum + '</div>' : '') + '</div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Nuova spesa</span></div><div class="card addx"><div class="fr"><input class="amt tnum" id="xAmt" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0,00"><input id="xNote" type="text" placeholder="Cos\'è" maxlength="40"></div>' +
-    '<div class="cats">' + CATS.map((c, k) => '<button class="cat' + (k === S.cat ? ' on' : '') + '" data-k="' + k + '">' + CATEMO[k] + ' ' + c[1] + '</button>').join('') + '</div>' +
+    '<div class="cats">' + CATS.map((c, k) => '<button class="cat' + (k === S.cat ? ' on' : '') + '" data-k="' + k + '">' + c.i + ' ' + c.n + '</button>').join('') + '</div>' +
     '<button class="btn tealb" id="xAdd" style="width:100%;margin-top:12px">Aggiungi</button></div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Movimenti</span></div>' + list + '</div>';
 

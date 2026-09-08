@@ -179,9 +179,11 @@ svg{display:block}
 .addx input:focus{border-color:var(--teal)}
 .cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cat{height:34px;padding:0 12px;border-radius:9px;background:var(--card2);font-size:13.5px;font-weight:600;color:var(--ink2);display:inline-flex;align-items:center;gap:6px}
+.cat .ic{width:16px;height:16px}
 .cat.on{background:var(--coral);color:#fff}
 .xi{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:11px 12px;margin-bottom:6px}
-.xi .xk{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:var(--card2);flex:none}
+.xi .xk{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--card2);color:var(--ink2);flex:none} .xi .xk .ic{width:20px;height:20px}
+.xsum .chip .ic{width:14px;height:14px;opacity:.8}
 .xi .xt{flex:1;min-width:0} .xi .xt b{display:block;font-size:15px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden} .xi .xt span{font-size:12.5px;color:var(--ink3);font-weight:600}
 .xi .xa{font-weight:800;font-size:15px}
 .xi .xd{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink3)} .xi .xd .ic{width:16px;height:16px}

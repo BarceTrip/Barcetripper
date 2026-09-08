@@ -35,7 +35,7 @@ export const STEPS = [
   notes:["Aerobús A1: fermata fuori dagli arrivi del T1, parte ogni 5-10 minuti, 35 minuti fino a Plaça d'Espanya.","Da Plaça d'Espanya metro L3 direzione Zona Universitària: due fermate, scendi a Sants Estació.","Taxi diretto circa 35 €: dì \"Carrer Numància 32\".","Stessa ora dell'Italia: non toccare l'orologio."]},
  {geo:{p:P.ABBAP},at:"2026-09-15T18:30",day:"Martedì 15 settembre",city:"Barcellona",mode:"stay",time:"18:30",title:"Check-in Abba Sants",place:"Carrer de Numància 32",det:"Prenotazione BC/20CQX44UMN · 805,03 € da pagare in hotel · reception 24 ore",addr:ABBA.addr,tel:ABBA.tel,telTxt:ABBA.telTxt,nav:G+encodeURIComponent(ABBA.addr)+"&travelmode=walking",
   facts:[["Prenotazione","BC/20CQX44UMN"],["Notti","4"],["Check-out","19 set"],["Cancellabile fino","15 set"]],ready:["Documento","Codice prenotazione BC/20CQX44UMN","Carta per pagare in hotel e per la tassa di soggiorno"],
-  notes:["Prenotato direttamente sul sito Abba: paghi qui 805,03 € più la tassa di soggiorno, circa 34 €.","Inclusi: bottiglia d'acqua e welcome drink.","Chiedi una camera lato cortile: le stanze su strada sono rumorose.","Verifica che sia la matrimoniale e non i due letti singoli.","Colazione non inclusa, ma è la cosa più lodata dell'hotel: se la vuoi, si aggiunge al banco."]},
+  notes:["Prenotato direttamente sul sito Abba: paghi qui 805,03 € più la tassa di soggiorno, circa 40 €, raddoppiata nel 2026.","Inclusi: bottiglia d'acqua e welcome drink.","Chiedi una camera lato cortile: le stanze su strada sono rumorose.","Verifica che sia la matrimoniale e non i due letti singoli.","Colazione non inclusa, ma è la cosa più lodata dell'hotel: se la vuoi, si aggiunge al banco."]},
  {geo:{p:P.ABBAP},at:null,days:['2026-09-16','2026-09-17','2026-09-18'],day:"Da mercoledì 16 a venerdì 18",city:"Barcellona",mode:"free",time:"—",title:"Tre giorni pieni a Barcellona",place:"Nessun vincolo di orario",det:"16, 17 e 18 settembre · metro Sants Estació a 300 m",
   ready:["Tessera sanitaria europea per qualsiasi visita medica","112 per le emergenze"],
   notes:["Metro Sants Estació (L3, L5) all'uscita dell'hotel. Plaça d'Espanya a un quarto d'ora a piedi, Camp Nou a mezz'ora.","Fontanella più vicina in Carrer de Viriat, 240 m.","T-casual da 10 corse, 13 € nel 2026, alle macchinette: conviene da 3 corse al giorno in su e vale anche sul treno per l'aeroporto.","Borsa chiusa e portata davanti in metro e sulle Ramblas.","Prendi le pillole agli orari soliti, il fuso è lo stesso."]},
@@ -92,8 +92,18 @@ export const STEPS = [
   notes:["Domenica sera i collegamenti da Sibari sono pochi: accordati prima con chi ti viene a prendere."]}
 ];
 
-export const CATS = [['🍽️','Cibo'],['🚇','Trasporti'],['🏨','Hotel'],['🛍️','Shopping'],['🎟️','Ingressi'],['💊','Farmacia'],['📦','Altro']];
-export const CATEMO = Object.fromEntries(CATS.map((c, k) => [k, c[0]]));
+/* Categorie di spesa, ognuna con la sua icona vettoriale nello stile delle altre icone dell'app. */
+const I = inner => '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+export const CATS = [
+  { n: 'Cibo', i: I('<path d="M7 3v5a3 3 0 0 0 6 0V3M10 3v5M10 11v10"/><path d="M18 3c-2 1.8-3 5-3 8h3v10"/>') },
+  { n: 'Mezzi', i: I('<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3M9 7h6"/><circle cx="8.5" cy="14.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.1" fill="currentColor"/>') },
+  { n: 'Da pagare', sub: 'hotel e tassa di soggiorno', i: I('<path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/>') },
+  { n: 'Vestiti', i: I('<path d="M9 3a3 3 0 0 0 6 0l5.5 2.5-2 4-2.5-1V21h-8V8.5l-2.5 1-2-4z"/>') },
+  { n: 'Igiene e farmacia', i: I('<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6M12 10v6M9 13h6"/>') },
+  { n: 'Piacere', i: I('<path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/>') },
+];
+/* categorie vecchie (Cibo, Trasporti, Hotel, Shopping, Ingressi, Farmacia, Altro) -> nuove, per le spese già salvate */
+export const CAT_MIGRATE = [0, 1, 2, 3, 5, 4, 5];
 
 export const PHRASES = [
   'Me han robado la cartera y el móvil. Necesito presentar una denuncia.',
