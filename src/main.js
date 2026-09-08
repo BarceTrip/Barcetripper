@@ -16,6 +16,8 @@ import { notifInit, notifAsk, icsExport } from './notify.js';
 import { luoghiShow, luoghiPause } from './ui/luoghi.js';
 import { drawValigia } from './ui/valigia.js';
 import { drawDocumenti } from './ui/documenti.js';
+import { drawSalute } from './ui/salute.js';
+import { frasiStop } from './ui/frasi.js';
 
 /* ---- schede ---- */
 const TABS = [
@@ -26,7 +28,7 @@ const TABS = [
   { id: 'sos', lbl: 'SOS', ico: ICONS.alert, page: 'pSos', draw: drawSos, cls: 'sos' },
 ];
 /* pagine senza scheda: si aprono sopra la scheda corrente e con "indietro" tornano lì */
-const SUB = { settings: 'pSettings', valigia: 'pValigia', documenti: 'pDocumenti' };
+const SUB = { settings: 'pSettings', valigia: 'pValigia', documenti: 'pDocumenti', salute: 'pSalute' };
 let prevTab = 'oggi', subFrom = 'oggi';
 
 function show(t, opts = {}) {
@@ -39,9 +41,11 @@ function show(t, opts = {}) {
   if (t === 'settings') { syncSwitches(); }
   else if (t === 'valigia') drawValigia();
   else if (t === 'documenti') drawDocumenti();
+  else if (t === 'salute') drawSalute();
   else if (!opts.noDraw) TABS.find(x => x.id === t).draw();
   if (t === 'oggi') marquee();   // il nastro dei chip si misura solo a pagina visibile
   if (t !== 'luoghi') luoghiPause();
+  if (t !== 'sos') frasiStop();   // il carosello delle frasi gira solo mentre lo guardi
   closeOverlays();
   if (t === 'sos') sfx('sos');
   window.scrollTo({ top: 0, behavior: opts.smooth ? 'smooth' : 'auto' });

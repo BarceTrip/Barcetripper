@@ -234,6 +234,9 @@ svg{display:block}
 
 /* ============ SOS ============ */
 .calls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.calls.one{grid-template-columns:1fr}
+.calls.one .call{flex-direction:row;align-items:center;min-height:0}
+.calls.one .call b{font-size:26px}
 .call{background:var(--card);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:112px;color:var(--ink);transition:transform .12s}
 .call:active{transform:scale(.97)}
 .call.pri{background:var(--coral);color:#fff;grid-column:1/-1;flex-direction:row;align-items:center;min-height:0}
@@ -308,6 +311,58 @@ svg{display:block}
 .dv-pages{width:100%;flex:none} .dv-pages img{display:block;width:100%;height:auto;background:#fff;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .docview iframe{flex:1;border:0;width:100%;min-height:100%}
 
+/* ============ Frasi parlanti ============ */
+.frfil{margin-bottom:10px} .frfil .chip{height:32px;cursor:pointer} .frfil .chip.on{background:var(--ink);color:var(--bg)}
+.frbox{position:relative}
+.frcards{display:flex;flex-direction:column;gap:8px}
+.frcard{position:relative;display:block;width:100%;text-align:left;background:var(--card);border-radius:16px;padding:14px 46px 12px 16px;color:var(--ink);
+  transition:transform .28s cubic-bezier(.2,.7,.2,1),opacity .28s ease,background .2s;will-change:transform,opacity}
+.frcard[hidden]{display:none}
+.frcard .frs{display:block;font-size:16.5px;font-weight:700;line-height:1.35}
+.frcard .frit{display:block;font-size:13px;color:var(--ink3);font-weight:600;margin-top:5px;line-height:1.35}
+.frcard .frv{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:var(--card2);color:var(--ink2);display:grid;place-items:center}
+.frcard .frv .ic{width:16px;height:16px}
+.frcard:active{transform:scale(.985)}
+.frcard.on{background:var(--teal);color:#fff} .frcard.on .frit{color:rgba(255,255,255,.85)} .frcard.on .frv{background:rgba(255,255,255,.22);color:#fff}
+.frcard.via{opacity:0;transform:translateX(-14px)}
+.frcard.entra{animation:frin .34s cubic-bezier(.2,.7,.2,1)}
+@keyframes frin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.fract{display:flex;gap:8px;margin-top:10px}
+.fract .chipbtn{height:34px}
+.frsel{position:sticky;bottom:calc(78px + env(safe-area-inset-bottom));z-index:20;display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 12px 12px 14px;border-radius:16px;background:var(--teal);color:#fff;box-shadow:var(--shadow)}
+.frsel[hidden]{display:none}
+.frsel .fst{flex:1;min-width:0} .frsel .fsx{display:block;font-size:15px;font-weight:800;line-height:1.3} .frsel .fsi{display:block;font-size:12.5px;opacity:.9;font-weight:600;margin-top:2px}
+.frsel .ibtn{width:38px;height:38px;background:rgba(255,255,255,.2);color:#fff}
+.fsb{display:flex;gap:6px;flex:none}
+.btn.wide{width:100%;margin-top:8px}
+
+/* ============ Salute ============ */
+.sal{margin-top:8px}
+.salh{display:flex;align-items:center;gap:12px}
+.salh .mi{width:42px;height:42px;border-radius:12px;background:var(--card2);color:var(--coral);display:grid;place-items:center;flex:none}
+.salh .pt{flex:1;min-width:0} .salh b{display:block;font-size:17px;font-weight:800;line-height:1.2} .salh span{display:block;font-size:13px;color:var(--ink2);font-weight:600}
+.sal p{font-size:14.5px;line-height:1.5;margin-top:10px;color:var(--ink)}
+.sal .chips{margin-top:10px} .sal .acts{display:flex;gap:8px;margin-top:12px} .sal .acts .btn{flex:1}
+.salnote{font-size:14px;color:var(--ink2);line-height:1.5;font-weight:600;margin-bottom:12px}
+.medf{display:block;margin-top:10px}
+.medf>span{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);margin-bottom:5px}
+.medf>span i{font-style:normal;color:var(--ink3);font-weight:600;margin-left:6px}
+.medf input,.medf textarea{width:100%;padding:11px 13px;border-radius:12px;background:var(--card2);border:2px solid transparent;font-size:16px;outline:none;color:var(--ink);font-family:inherit;resize:vertical}
+.medf input:focus,.medf textarea:focus{border-color:var(--teal)}
+.medf input::placeholder,.medf textarea::placeholder{color:var(--ink3)}
+.medadd{display:flex;flex-direction:column;gap:8px}
+.medadd.two{flex-direction:row}
+.medadd input{flex:1;min-width:0;height:46px;padding:0 13px;border-radius:12px;background:var(--card2);border:2px solid transparent;font-size:16px;outline:none;color:var(--ink)}
+.medadd input:focus{border-color:var(--teal)}
+.medi{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:11px 10px 11px 14px;margin-bottom:6px}
+.medi .medt{flex:1;min-width:0} .medi b{display:block;font-size:15px;font-weight:700} .medi span{display:block;font-size:12.5px;color:var(--ink3);font-weight:600}
+.medi .ibtn{width:34px;height:34px;background:var(--card2)} .medi .ibtn .ic{width:15px;height:15px}
+.medbig{font-size:20px;line-height:1.25;text-align:left;max-height:100%;overflow:auto}
+.medrow{margin-bottom:16px}
+.medrow b{display:block;font-size:15px;font-weight:800;letter-spacing:.01em}
+.medrow small{display:block;font-size:12px;color:#777;font-weight:600;margin-bottom:3px}
+.medrow span{display:block;font-size:22px;font-weight:800;line-height:1.2}
+
 /* ============ Tab bar ============ */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--tab);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
 .tabbar-in{max-width:560px;margin:0 auto;display:flex}
@@ -318,7 +373,7 @@ svg{display:block}
 .tabbar button.sos[aria-selected=true]{color:var(--coral)}
 
 /* ============ Varie ============ */
-.bigtxt{position:fixed;inset:0;z-index:70;background:#fff;color:#000;display:none;place-items:center;padding:30px;text-align:center;font-size:min(11vw,60px);font-weight:800;line-height:1.15;letter-spacing:-.03em}
+.bigtxt{position:fixed;inset:0;z-index:70;background:#fff;color:#000;display:none;place-items:center;padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));text-align:center;font-size:min(11vw,60px);font-weight:800;line-height:1.15;letter-spacing:-.03em;overflow:auto}
 .bigtxt.on{display:grid}
 .bigtxt small{display:block;font-size:15px;font-weight:600;color:#777;margin-top:24px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,8px);z-index:80;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .18s,transform .2s;background:var(--ink);color:var(--bg);box-shadow:var(--shadow)}

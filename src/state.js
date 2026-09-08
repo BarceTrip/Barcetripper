@@ -9,11 +9,12 @@ export const S = {
   seeded: false, seedV2: false, seedV3: false, snd: true, music: true,
   bag: { mode: 'out', checks: {}, custom: [], hidden: [] },   // valigia: andata/ritorno, spunte, oggetti aggiunti, predefiniti tolti
   pl: { want: {}, done: {}, zoom: 'near' },                      // luoghi: da vedere, fatti, zoom della mappa
+  med: { meds: [] },                                             // scheda medica: solo su questo telefono
 };
 
 export function save() {
-  const { i, checks, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, snd, music, bag, pl } = S;
-  try { localStorage.setItem(KEY, JSON.stringify({ i, checks, snd, music, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, bag, pl })); } catch (e) {}
+  const { i, checks, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, snd, music, bag, pl, med } = S;
+  try { localStorage.setItem(KEY, JSON.stringify({ i, checks, snd, music, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, bag, pl, med })); } catch (e) {}
 }
 
 export function load() {
@@ -34,6 +35,7 @@ export function load() {
       }
       S.seeded = !!d.seeded; S.seedV2 = !!d.seedV2; S.seedV3 = !!d.seedV3;
       if (d.bag && typeof d.bag === 'object') S.bag = { mode: d.bag.mode === 'back' ? 'back' : 'out', checks: d.bag.checks || {}, custom: Array.isArray(d.bag.custom) ? d.bag.custom : [], hidden: Array.isArray(d.bag.hidden) ? d.bag.hidden : [] };
+      if (d.med && typeof d.med === 'object') S.med = { ...d.med, meds: Array.isArray(d.med.meds) ? d.med.meds : [] };
       if (d.pl && typeof d.pl === 'object') S.pl = { want: d.pl.want || {}, done: d.pl.done || {}, zoom: d.pl.zoom === 'city' ? 'city' : 'near' };
     }
   } catch (e) {}

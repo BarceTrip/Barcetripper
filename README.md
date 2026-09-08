@@ -38,6 +38,10 @@ src/ui/sos.js         pagina Emergenza
 src/ui/settings.js    pagina Impostazioni e tema
 src/ui/valigia.js     pagina Valigia (tessere spuntabili, andata e ritorno)
 src/ui/documenti.js   pagina Documenti (file salvati solo sul telefono, IndexedDB)
+src/ui/salute.js      pagina Salute (numeri, dove andare, scheda medica personale)
+src/ui/frasi.js       frasario parlante in SOS (carosello + voce spagnola)
+src/data/frasi.js     le frasi in spagnolo con traduzione
+src/data/salute.js    numeri e punti sanitari, campi della scheda medica
 src/ui/confetti.js    coriandoli a fine viaggio
 src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
 src/audio/sfx.js      effetti sonori
@@ -68,6 +72,12 @@ Mappa 3D interattiva con l'hotel al centro: MapLibre GL con le mappe vettoriali 
 ## Documenti
 
 Biglietti, carte d'imbarco, verbali: si aggiungono dal telefono (PDF o immagini) e restano in IndexedDB sul dispositivo, senza passare da nessun server. I PDF vengono convertiti in immagini delle pagine con PDF.js al momento dell'aggiunta (caricato solo allora), perché su iPhone un PDF incorporato non si adatta allo schermo; il visualizzatore mostra le pagine a tutto schermo, con zoom a pulsanti e doppio tocco, anche senza rete, e il file originale si può condividere con il foglio di condivisione. Nessun documento personale va messo nel progetto: l'app è pubblicata, tutto ciò che sta in `dist/` è scaricabile da chiunque. Su iPhone i dati restano finché l'app è sulla schermata Home. La pagina si apre dalle impostazioni e dal tasto "Documenti" nelle tappe che lo prevedono (`docs: true`).
+
+## SOS e Salute
+
+La scheda Emergenza tiene numeri, hotel, codici e il frasario parlante: 67 frasi in spagnolo con la traduzione italiana sotto, divise per categoria (urgenza, ansia e mente, salute, farmacia, mi sono perso, furto, utili). Le frasi scorrono a turno una alla volta, così basta guardare e toccare quella giusta senza riempire la pagina; il tocco ferma il carosello, legge la frase con la voce spagnola del telefono (`speechSynthesis`, funziona anche offline) e apre una barra per ripeterla o mostrarla a tutto schermo.
+
+Da SOS si apre la pagina Salute: 112 e 061 (personale sanitario al telefono, gratuito, 24 ore), il link alle farmacie di turno, e i quattro punti utili attorno all'hotel con distanze e indicazioni (CAP Numància a 150 m, pronto soccorso dell'Hospital Clínic, due farmacie aperte 24 ore). In fondo la scheda medica personale: dati, allergie, cosa aiuta, farmaci con il principio attivo (in Spagna i nomi commerciali cambiano) e contatto di emergenza. Il tasto "Mostra al medico" la proietta a tutto schermo in spagnolo e in italiano. Come i Documenti, resta solo sul telefono: mai nel repository, mai in rete.
 
 ## Meteo
 
