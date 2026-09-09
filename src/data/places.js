@@ -14,6 +14,8 @@ export const P = {
   BCNP:  [41.2974, 2.0833],
   BCN2:  [41.3030, 2.0760],
   ABBAP: [41.3826, 2.1400],
+  SARTO: [41.37014, 2.13784],   // Sun Arranjaments, Carrer de la Constitució 4 (civico 2-8 in OpenStreetMap)
+  LOCKER:[41.38249, 2.13949],   // locker InPost ES-32234, Carrer de Numància 33
   RIVP:  [41.7565, 12.2302],
   MONTI: [41.8947, 12.4925],
   MMONTI:[41.8938, 12.4920],

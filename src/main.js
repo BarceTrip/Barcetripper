@@ -68,10 +68,12 @@ function goto(k, dir) {
   S.i = k; save(); drawOggi(dir);
   if (S.tab !== 'oggi') show('oggi', { noDraw: true }); else window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+/* suono per tipo di tappa: quelli senza suono proprio fanno il tic secco */
+const SFX_MODE = { rail: 'rail', air: 'air', stay: 'stay', free: 'free' };
 function advance(d) {
   const n = S.i + d; if (n < 0 || n >= STEPS.length) return;
   const last = n === STEPS.length - 1;
-  if (d > 0) { const m = STEPS[n].mode; sfx(last ? 'done' : (m === 'road' ? 'tick' : m)); if (last) confetti(); } else sfx('back');
+  if (d > 0) { const m = STEPS[n].mode; sfx(last ? 'done' : (SFX_MODE[m] || 'tick')); if (last) confetti(); } else sfx('back');
   if (navigator.vibrate) navigator.vibrate(8);
   goto(n, d);
 }

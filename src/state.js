@@ -6,15 +6,15 @@ const KEY = 'viaggio';
 export const S = {
   i: 0, tab: 'step', checks: {}, theme: 'dark', notified: {},
   exp: [], budget: 3500, budgetSet: false, cat: 0,
-  seeded: false, seedV2: false, seedV3: false, snd: true, music: true,
+  seeded: false, seedV2: false, seedV3: false, stepsV2: false, snd: true, music: true,
   bag: { mode: 'out', checks: {}, custom: [], hidden: [] },   // valigia: andata/ritorno, spunte, oggetti aggiunti, predefiniti tolti
   pl: { want: {}, done: {}, zoom: 'near' },                      // luoghi: da vedere, fatti, zoom della mappa
   med: { meds: [] },                                             // scheda medica: solo su questo telefono
 };
 
 export function save() {
-  const { i, checks, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, snd, music, bag, pl, med } = S;
-  try { localStorage.setItem(KEY, JSON.stringify({ i, checks, snd, music, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, bag, pl, med })); } catch (e) {}
+  const { i, checks, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, stepsV2, snd, music, bag, pl, med } = S;
+  try { localStorage.setItem(KEY, JSON.stringify({ i, checks, snd, music, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, stepsV2, bag, pl, med })); } catch (e) {}
 }
 
 export function load() {
@@ -33,7 +33,7 @@ export function load() {
         S.budget = d.budget; S.budgetSet = !!d.budgetSet;
         if ((S.budget === 1200 || S.budget === 2500) && !S.budgetSet) S.budget = 3500;
       }
-      S.seeded = !!d.seeded; S.seedV2 = !!d.seedV2; S.seedV3 = !!d.seedV3;
+      S.seeded = !!d.seeded; S.seedV2 = !!d.seedV2; S.seedV3 = !!d.seedV3; S.stepsV2 = !!d.stepsV2;
       if (d.bag && typeof d.bag === 'object') S.bag = { mode: d.bag.mode === 'back' ? 'back' : 'out', checks: d.bag.checks || {}, custom: Array.isArray(d.bag.custom) ? d.bag.custom : [], hidden: Array.isArray(d.bag.hidden) ? d.bag.hidden : [] };
       if (d.med && typeof d.med === 'object') S.med = { ...d.med, meds: Array.isArray(d.med.meds) ? d.med.meds : [] };
       if (d.pl && typeof d.pl === 'object') S.pl = { want: d.pl.want || {}, done: d.pl.done || {}, zoom: d.pl.zoom === 'city' ? 'city' : 'near' };
@@ -54,5 +54,14 @@ export function load() {
     S.exp.push({ id: 5, amt: 40, cat: 2, note: 'Tassa di soggiorno Abba, 4 notti, stima', ts: Date.parse('2026-09-08T12:00') });
     S.budget = 4000; S.budgetSet = true; S.seedV3 = true;
     save();   // la migrazione va scritta subito, non alla prossima modifica
+  }
+  /* 9 settembre 2026: due tappe nuove, sarto e locker, inserite in posizione 7 e 8.
+     Spunte e avvisi sono salvati per numero di tappa, quindi tutto quello che veniva
+     dopo va spostato di due, altrimenti le spunte finirebbero sulla tappa sbagliata. */
+  if (!S.stepsV2) {
+    const shift = o => { const r = {}; for (const k in o) { const n = +k; r[Number.isFinite(n) && n >= 7 ? n + 2 : k] = o[k]; } return r; };
+    S.checks = shift(S.checks); S.notified = shift(S.notified);
+    if (S.i >= 7) S.i = Math.min(S.i + 2, STEPS.length - 1);
+    S.stepsV2 = true; save();
   }
 }

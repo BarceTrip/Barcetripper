@@ -5,6 +5,7 @@
   --coral:#EC6B6B; --coral-2:#D95C5C; --teal:#5F9C97; --teal-2:#4E837F; --yellow:#F2C94C; --lav:#B29BDD; --slate:#7F97A4;
   --ok:#5FBF9B; --tab:#1F2A31; --on:#fff;
   --rail:var(--coral); --air:var(--yellow); --stay:var(--teal); --road:var(--slate); --free:var(--lav);
+  --terra:#D9784A; --sky:#5B8DEF; --shop:var(--terra); --box:var(--sky);
   --blue:#5B8DEF;
   --shadow:0 6px 18px rgba(0,0,0,.22);
 }
