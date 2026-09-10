@@ -85,7 +85,7 @@ export async function drawDocumenti() {
   const add = '<button class="chipbtn on" id="dAdd">' + ICONS.plus + 'Aggiungi</button><input type="file" id="dFile" accept="application/pdf,image/*" multiple hidden>';
   const list = docs.length ? docs.map(d => '<div class="doc" data-id="' + d.id + '"><span class="dk">' + (isPdf(d) ? 'PDF' : 'IMG') + '</span><div class="dt"><b>' + esc(d.name) + '</b><span>' + fmtSize(d.size) + (d.pages ? ' · ' + d.pages.length + (d.pages.length === 1 ? ' pagina' : ' pagine') : '') + ' · ' + new Date(d.ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }) + '</span></div>' +
     '<button class="ibtn" data-open aria-label="Apri">' + ICONS.big + '</button><button class="ibtn" data-share aria-label="Condividi">' + ICONS.share + '</button><button class="ibtn" data-del aria-label="Elimina">' + ICONS.x + '</button></div>').join('') :
-    '<div class="hint">Nessun documento ancora. Tocca Aggiungi e scegli dal telefono: biglietto della Domus Aurea, verbale 104 in versione omissis, carte d\'imbarco, conferme degli hotel.</div>';
+    '<button class="empty" id="dEmpty"><span class="ei">' + ICONS.plus + '</span><b>Aggiungi il primo documento</b><span>PDF o foto dal telefono: biglietto della Domus Aurea, verbale 104 in versione omissis, carte d\'imbarco, conferme degli hotel.</span></button>';
   $('#pDocumenti').innerHTML = header(docs.length ? docs.length + (docs.length === 1 ? ' documento' : ' documenti') : 'Solo sul telefono', 'Documenti', { back: 'bDocBack', extra: add }) +
     '<div class="card docinfo"><b>Restano nel telefono.</b><span>Non passano da internet e si aprono anche senza rete. Per averli sempre, tieni l\'app sulla schermata Home. Tocca il nome per rinominare; nel visualizzatore, doppio tocco o + e − per ingrandire.</span></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Da avere</span></div><div class="chips"><span class="chip">Biglietto Domus Aurea</span><span class="chip">Verbale 104 (omissis)</span><span class="chip">Carte d\'imbarco</span><span class="chip">Conferme hotel</span><span class="chip">Documento d\'identità</span></div></div>' +
@@ -93,6 +93,7 @@ export async function drawDocumenti() {
 
   $('#bDocBack').onclick = () => { sfx('back'); emit('open', 'back'); };
   $('#dAdd').onclick = () => { sfx('tick'); $('#dFile').click(); };
+  const de = $('#dEmpty'); if (de) de.onclick = () => { sfx('tick'); $('#dFile').click(); };
   $('#dFile').onchange = async e => {
     const files = [...e.target.files]; if (!files.length) return;
     let ok = 0, ko = [];

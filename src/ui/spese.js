@@ -26,11 +26,19 @@ export function drawSpese() {
     '<button class="btn tealb" id="xAdd" style="width:100%;margin-top:12px">Aggiungi</button></div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Movimenti</span></div>' + list + '</div>';
 
+  /* il budget si cambia nella tessera stessa: il tasto diventa un campo con Ok */
   $('#bBud').onclick = () => {
-    const v = prompt('Budget totale del viaggio (€)', String(S.budget)); const n = parseFloat(String(v).replace(',', '.'));
-    if (isNaN(n) || n <= 0) { if (v !== null) toast('Budget non valido'); return; }
-    if (n > 1000000) { toast('Budget troppo grande'); return; }
-    { S.budget = n; S.budgetSet = true; save(); drawSpese(); sfx('tick'); }
+    sfx('tick');
+    $('#pSpese .bud .lbl').innerHTML = '<span class="eyebrow">Budget totale</span><span class="budedit"><input class="tnum" id="budIn" type="text" inputmode="decimal" autocomplete="off" maxlength="9" value="' + String(S.budget).replace('.', ',') + '"><i>€</i><button id="budOk">Ok</button></span>';
+    const inp = $('#budIn'); inp.focus(); inp.select();
+    const ok = () => {
+      const n = parseFloat(String(inp.value).replace(/[^0-9.,]/g, '').replace(',', '.'));
+      if (isNaN(n) || n <= 0) { toast('Budget non valido'); drawSpese(); return; }
+      if (n > 1000000) { toast('Budget troppo grande'); drawSpese(); return; }
+      S.budget = Math.round(n * 100) / 100; S.budgetSet = true; save(); sfx('check'); drawSpese();
+    };
+    $('#budOk').onclick = ok;
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ok(); else if (e.key === 'Escape') drawSpese(); });
   };
   $$('#pSpese .cat').forEach(b => b.onclick = () => { S.cat = +b.dataset.k; $$('#pSpese .cat').forEach(x => x.classList.toggle('on', +x.dataset.k === S.cat)); sfx('tick'); });
   const add = () => {
@@ -54,5 +62,10 @@ export function drawSpese() {
   amt.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
   $('#xNote').addEventListener('keydown', e => { if (e.key === 'Enter') amt.focus(); });
   segui();
-  $$('#pSpese .xd').forEach(b => b.onclick = () => { S.exp = S.exp.filter(x => x.id !== +b.dataset.id); save(); sfx('uncheck'); drawSpese(); });
+  /* la × toglie subito, ma per qualche secondo si può annullare */
+  $$('#pSpese .xd').forEach(b => b.onclick = () => {
+    const x = S.exp.find(y => y.id === +b.dataset.id); if (!x) return;
+    S.exp = S.exp.filter(y => y.id !== x.id); save(); sfx('uncheck'); drawSpese();
+    toast('Tolta: ' + eur(x.amt), { label: 'Annulla', fn: () => { S.exp.push(x); save(); sfx('coin'); drawSpese(); } });
+  });
 }

@@ -27,7 +27,7 @@ export function drawSos() {
     call('+34930338000', 'Consolato', "Carrer d'Aribau 185 · risponde lun, mer, gio, ven 15-16 e mar 11-12") +
     call('+34659790266', 'Reperibilità', 'Funzionario di turno del Consolato: feriali 18-22, weekend 9-22. Solo emergenze gravi') +
     call(h.tel, 'Hotel', h.name) + '</div>' +
-    '<button class="btn tealb wide" id="bSalute">' + ICONS.cross + 'Salute: medico, farmacia, scheda medica</button>' +
+    '<button class="btn tealb wide" id="bSalute">' + ICONS.cross + 'Salute e scheda medica</button>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Dove alloggi adesso</span></div><div class="card hot"><b>' + h.name + '</b><div class="ad">' + h.addr + '</div><div class="hr">' +
     '<button class="btn tealb" id="bShowAddr">' + ICONS.big + 'Mostra al tassista</button>' + (h === ABBA ? '<button class="btn" id="bGoHotel">' + ICONS.nav + 'Portami in hotel</button>' : '') + '</div></div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">I tuoi codici</span><small>tocca per copiare</small></div><div class="chips">' + codes + '</div></div>' +

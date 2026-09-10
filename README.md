@@ -60,7 +60,7 @@ Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cron
 
 ## Interfaccia
 
-Cinque schede in basso: Oggi, Percorso, Spese, Luoghi, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
+Cinque schede in basso: Oggi, Percorso, Spese, Luoghi, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. La scheda aperta ha una pillola dietro l'icona. Nella tessera Oggi c'è il riassunto della tappa (`det`) e, sotto i tasti, cosa viene dopo. Nel Percorso l'intestazione del giorno resta in vista mentre scorri (per questo `html`, `body` e `main` usano `overflow-x:clip`, non `hidden`). Il budget si cambia nella tessera Spese, e una spesa tolta per sbaglio si recupera con Annulla nel toast. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
 
 ## Valigia
 

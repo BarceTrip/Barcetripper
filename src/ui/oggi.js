@@ -41,6 +41,11 @@ export function updCd() {
 }
 setInterval(updCd, 30000);
 
+/* "sab 19": per la riga "Poi" quando la tappa successiva è in un altro giorno */
+function shortDay(x) {
+  const d = new Date(x.at || (x.days && x.days.length ? x.days[0] + 'T12:00' : ''));
+  return isNaN(d) ? '' : d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }).replace('.', '');
+}
 const route = () => '<div class="route">' + STEPS.map((s, k) => '<i style="--c:var(--' + s.mode + ')" class="' + (k < S.i ? 'done' : k === S.i ? 'now' : '') + '"></i>').join('') + '</div>';
 const tile = (txt, k, ok) => '<button class="tile' + (ok ? ' ok' : '') + '" data-k="' + k + '"><span class="ti">' + ICONS.check + '</span><span class="tt">' + txt + '</span></button>';
 
@@ -64,10 +69,14 @@ export function drawOggi(dir) {
   const hero = '<div class="hero" style="--mode:var(--' + s.mode + ');--on:' + (ON[s.mode] || '#fff') + '"><div class="mark">' + ICONS[s.mode] + '</div>' +
     '<div class="hero-top">' + ICONS[s.mode] + '<span class="day">' + s.day + '</span><span class="cd" id="cd"></span></div>' +
     '<div class="time tnum">' + (s.at ? s.time : '') + '</div><h2 class="title">' + s.title + codeTag(s) + '</h2>' +
-    '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + '<div class="wx" id="wx"><span class="wxp">Meteo in arrivo…</span></div>' + chips + acts + '</div>';
+    '<div class="place">' + s.place + '</div>' + (s.addr ? '<div class="addr">' + s.addr + '</div>' : '') + (s.det ? '<div class="det">' + s.det + '</div>' : '') + '<div class="wx" id="wx"><span class="wxp">Meteo in arrivo…</span></div>' + chips + acts + '</div>';
 
   const nav = '<div class="nav2"><button class="btn ghost" id="bBack"' + (S.i === 0 ? ' disabled' : '') + '>' + ICONS.chevL + 'Indietro</button>' +
     '<button class="btn pri next" id="bNext"' + (last ? ' disabled' : '') + '><span class="mark">' + ICONS.sign + '</span>' + (last ? 'Viaggio finito' : ICONS.sign + 'Fatto, avanti' + ICONS.chevR) + '</button></div>';
+
+  /* cosa viene dopo: il giorno solo se cambia, poi ora e titolo */
+  const nx = STEPS[S.i + 1];
+  const nextup = nx ? '<div class="nextup">' + ICONS.chevR + '<span>Poi' + (nx.day !== s.day ? ' ' + shortDay(nx) : '') + (nx.at ? ' alle <b class="tnum">' + nx.time + '</b>' : '') + ' · ' + nx.title + codeTag(nx) + '</span></div>' : '';
 
   let ready = '';
   if (s.ready) {
@@ -83,7 +92,7 @@ export function drawOggi(dir) {
 
   /* striscia della valigia: alla partenza (pack "out") e ai check-out (pack "back") */
   $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + (s.pack ? bagStrip(s.pack) : '') +
-    '<div class="sv' + (dir > 0 ? ' in-r' : dir < 0 ? ' in-l' : '') + '" id="sv">' + hero + nav + ready + notes + planb + '</div>';
+    '<div class="sv' + (dir > 0 ? ' in-r' : dir < 0 ? ' in-l' : '') + '" id="sv">' + hero + nav + nextup + ready + notes + planb + '</div>';
   updCd(); loadWx(s); bagStripBind(); marquee();
 
   $('#bBack').onclick = () => emit('advance', -1);

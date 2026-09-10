@@ -2,10 +2,18 @@ import { ICONS } from "../icons.js";
 export const $ = s => document.querySelector(s);
 export const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 
-export function toast(m) {
+/* act: {label, fn} aggiunge un tasto (es. Annulla) e tiene il toast in vista più a lungo */
+export function toast(m, act) {
   const t = $('#toast');
-  t.textContent = m; t.classList.add('show');
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1400);
+  t.textContent = ''; t.classList.toggle('act', !!act);
+  if (act) {
+    const s = document.createElement('span'); s.textContent = m; t.appendChild(s);
+    const b = document.createElement('button'); b.textContent = act.label || 'Annulla';
+    b.onclick = () => { clearTimeout(t._h); t.classList.remove('show'); act.fn(); };
+    t.appendChild(b);
+  } else t.textContent = m;
+  t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), act ? 4500 : 1400);
 }
 
 /* piccolo bus eventi per non creare import circolari (es. la mappa che chiede di cambiare tappa) */

@@ -100,6 +100,8 @@ function initMap() {
   M.geo.on('error', e => { YOU.err = e.code === 1 ? 'Posizione negata: distanze dall\'hotel' : 'Posizione non trovata: distanze dall\'hotel'; eyebrow(); });
   map.on('style.load', addData);
   map.on('load', () => { if (S.tab === 'luoghi') geoOn(); });
+  /* i crediti stanno nella riga sotto la mappa e dietro la ⓘ: il riquadro bianco non deve coprire la mappa all'apertura */
+  map.once('load', () => { const a = $('#lCanvas .maplibregl-ctrl-attrib'); if (a) a.classList.remove('maplibregl-compact-show'); });
   map.on('error', e => { console.warn('Mappa:', e && e.error ? e.error.message || e.error : e); if (!M.ready) { const el = $('#lOff'); if (el) el.hidden = false; } });
   /* lo spillo dell'hotel */
   const el = document.createElement('button'); el.className = 'hpin'; el.setAttribute('aria-label', 'Abba Sants');
