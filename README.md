@@ -18,6 +18,8 @@ Opzione A, trascina la cartella `dist/` su https://app.netlify.com/drop (come fa
 
 Opzione B, consigliata: metti il progetto su GitHub e collega il repository a Netlify. `netlify.toml` contiene già comando di build e cartella di pubblicazione: ogni push pubblica da solo.
 
+`netlify.toml` imposta anche le intestazioni di sicurezza: una Content-Security-Policy che ammette solo i servizi usati dall'app (Open-Meteo, OpenFreeMap, rilievo AWS, OSRM, Photon, Nominatim), più `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy`. Uno script iniettato da chiunque, hosting compreso, non viene eseguito; se si aggiunge un servizio nuovo va aggiunto anche lì, altrimenti il browser lo blocca.
+
 Dopo la pubblicazione, su iPhone: Safari, Condividi, "Aggiungi alla schermata Home". Da lì in poi si apre a schermo intero, con l'icona giusta, e resta disponibile senza rete.
 
 ## Struttura

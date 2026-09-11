@@ -2,6 +2,17 @@
   command = "npm run build"
   publish = "dist"
 
+# Intestazioni di sicurezza: la CSP ammette solo i servizi che l'app usa davvero (meteo, mappe, rilievo,
+# percorsi, geocoder). Uno script iniettato da chiunque, hosting compreso, non verrebbe eseguito.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tiles.openfreemap.org https://s3.amazonaws.com; font-src 'self' data:; connect-src 'self' https://api.open-meteo.com https://tiles.openfreemap.org https://s3.amazonaws.com https://routing.openstreetmap.de https://photon.komoot.io https://nominatim.openstreetmap.org; media-src 'self' blob:; frame-src blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), payment=(), usb=()"
+
 [[headers]]
   for = "/sw.js"
   [headers.values]
