@@ -79,10 +79,9 @@ Budget del viaggio **4000 €**, esclusi voli e treni già pagati. Già impegnat
 ## Salute e documenti
 
 - Tessera sanitaria europea; verbale 104 in versione omissis (serve alla Domus Aurea, nessuno deve leggere la diagnosi).
-- Pillole agli orari soliti, il fuso è lo stesso. Farmaci con il **principio attivo** scritto: in Spagna i nomi commerciali cambiano.
 - A Barcellona: **112** emergenze · **061 Salut Respon** (sanitari al telefono, gratis, 24 ore) · CAP Numància, Carrer de Numància 23, a 150 m dall'hotel, lun-ven 8-20 · pronto soccorso Hospital Clínic, Carrer de Villarroel 170, metro L5 · farmacie 24 ore: Aragó 1 e Aribau 62.
 - Polizia catalana Mossos d'Esquadra **088**. Furto: denuncia ai Mossos entro 24 ore, altrimenti l'assicurazione non paga; bloccare subito carta Revolut e SIM.
-- Consolato d'Italia a Barcellona: Carrer d'Aribau 185, +34 930 338 000 (lun, mer, gio, ven 15-16; mar 11-12). Reperibilità per emergenze gravi +34 659 790 266 (feriali 18-22, weekend 9-22).
+- Consolato d'Italia a Barcellona: Carrer d'Aribau 185, +34 930 338 000 (telefono lun-ven 9:30-11:30; sportello lun, mer, gio, ven 9:30-13 e mar 14:30-17:30). Reperibilità per emergenze gravi +34 659 790 266 (feriali 18-22, weekend e festivi 9-22); nelle altre ore funzionario di turno della Farnesina +39 06 3691 2666. Fonte: consbarcellona.esteri.it, letto l'11 settembre 2026.
 
 ## Luoghi utili vicino all'hotel
 
