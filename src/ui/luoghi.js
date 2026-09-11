@@ -22,6 +22,11 @@ const YOU = { pos: null, acc: null, err: null, drawn: null };
 const M = { map: null, geo: null, theme: null, ready: false, pitch: true };
 let sel = null, filter = 'all';
 const CERCA = { q: '', res: [] };
+/* Civici: le tessere di OpenFreeMap non li contengono, quindi "Numància 33" passa da Photon (OpenStreetMap),
+   con Nominatim di riserva. Solo l'area di Barcellona, solo quando nella ricerca c'è un numero. */
+const GEO = { q: '', res: [], timer: null, ctl: null, stato: '', cache: new Map() };
+const BCN = { w: 1.95, s: 41.25, e: 2.35, n: 41.55 };
+const haCivico = q => /\d/.test(q);
 const ZT = { n: 'Trovati', c: '#F2994A' };   // colore dei risultati di ricerca
 const zona = p => ZONES[p.z] || ZT;
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -87,6 +92,7 @@ function placesGeo() {
 function initMap() {
   M.theme = S.theme;
   const map = M.map = new GLMap({ container: 'lCanvas', style: STYLE[S.theme], center: lngLat(HOTEL), zoom: 14.3, pitch: 55, bearing: -20, maxPitch: 72, attributionControl: { compact: true }, preserveDrawingBuffer: new URLSearchParams(location.search).has('shot') });   // ?shot serve solo agli screenshot di test
+  if (new URLSearchParams(location.search).has('shot')) window.__map = map;   // solo per i test: la mappa non è esposta altrimenti
   map.addControl(new NavigationControl({ visualizePitch: true }), 'top-right');
   M.geo = new GeolocateControl({ positionOptions: { enableHighAccuracy: true, timeout: 12000 }, trackUserLocation: true, showAccuracyCircle: true, fitBoundsOptions: { maxZoom: 16 } });
   map.addControl(M.geo, 'top-right');
@@ -175,7 +181,7 @@ export function goHotel() {
 /* ---- pagina ---- */
 function build() {
   $('#pLuoghi').innerHTML = header('Distanze dall\'hotel', 'Luoghi', { gear: true, extra: '<button class="ibtn" id="lLoc" aria-label="Dove sono">' + ICONS.locate + '</button>' }) +
-    '<div class="lcerca"><span class="lci">' + ICONS.search + '</span><input id="lQ" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="Cerca: bar, farmacia, bagno…" maxlength="30"><button class="lcx" id="lQx" hidden aria-label="Cancella">' + ICONS.x + '</button></div>' +
+    '<div class="lcerca"><span class="lci">' + ICONS.search + '</span><input id="lQ" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="Cerca: bar, farmacia, Numància 33…" maxlength="30"><button class="lcx" id="lQx" hidden aria-label="Cancella">' + ICONS.x + '</button></div>' +
     '<div class="lsugg">' + CERCA_SUGG.map(s => '<button class="chip" data-s="' + s + '">' + s + '</button>').join('') + '</div>' +
     '<div class="map"><div id="lCanvas"></div><div class="mapui"><button id="lPitch" class="on">3D</button><button id="lHome" aria-label="Portami in hotel">' + ICONS.stay + '</button></div>' +
     '<div class="mapoff" id="lOff" hidden><b>Serve la rete per la mappa</b><span>Elenco, stime e indicazioni funzionano lo stesso.</span></div></div>' +
@@ -256,7 +262,62 @@ function cerca(q) {
   if (!nq) { CERCA.res = []; return; }
   const dentro = p => norm(p.n).includes(nq) || norm(p.a).includes(nq) || norm(p.d).includes(nq) || norm(p.s).includes(nq);
   const o = origin();
-  CERCA.res = [HP].concat(PLACES).filter(dentro).concat(cercaPoi(q)).sort((a, b) => hav(o, a.p) - hav(o, b.p)).slice(0, 40);
+  CERCA.res = [HP].concat(PLACES).filter(dentro).concat(cercaPoi(q)).concat(GEO.q === nq ? GEO.res : []).sort((a, b) => hav(o, a.p) - hav(o, b.p)).slice(0, 40);
+}
+async function photon(q, o, signal) {
+  const r = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=6&lat=' + o[0] + '&lon=' + o[1] + '&bbox=' + [BCN.w, BCN.s, BCN.e, BCN.n].join(','), { signal });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return ((await r.json()).features || []).map(f => {
+    const p = f.properties || {}, c = f.geometry.coordinates;
+    return { via: p.street || '', hn: p.housenumber || '', nome: p.osm_key === 'building' ? '' : (p.name || ''), a: [p.district || p.locality, p.city].filter(Boolean).join(', '), p: [c[1], c[0]] };
+  });
+}
+async function nominatim(q, signal) {
+  const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&bounded=1&viewbox=' + [BCN.w, BCN.n, BCN.e, BCN.s].join(',') + '&q=' + encodeURIComponent(q), { signal });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return (await r.json()).map(x => {
+    const a = x.address || {};
+    return { via: a.road || '', hn: a.house_number || '', nome: x.category === 'building' ? '' : (x.name || ''), a: [a.suburb || a.neighbourhood, a.city || a.town].filter(Boolean).join(', '), p: [+x.lat, +x.lon] };
+  });
+}
+/* una riga per civico: il punto è quello del palazzo, le attività trovate a quel numero vanno nel sottotitolo */
+function perCivico(res) {
+  const g = new Map();
+  for (const x of res) {
+    if (!x.hn) continue;   // senza numero è un tratto di via o un quartiere: non è quello che cerchi
+    const k = norm(x.via + ' ' + x.hn), e = g.get(k) || { n: [x.via, x.hn].filter(Boolean).join(' '), nomi: [], p: null, a: x.a };
+    if (!x.nome || !e.p) e.p = x.p;
+    if (x.nome && e.nomi.length < 3 && !e.nomi.includes(x.nome)) e.nomi.push(x.nome);
+    g.set(k, e);
+  }
+  return [...g.values()].map((e, i) => ({ id: 'g' + i, n: e.n, s: e.n, a: 'Civico · ' + (e.nomi.length ? e.nomi.join(', ') : e.a), z: 'trovato', p: e.p, poi: true }));
+}
+/* parte solo se c'è un numero; aspetta mezzo secondo che tu finisca di scrivere; una richiesta alla volta */
+function cercaCivico(q) {
+  clearTimeout(GEO.timer);
+  const nq = norm(q);
+  if (!haCivico(nq)) { if (GEO.ctl) GEO.ctl.abort(); GEO.q = ''; GEO.res = []; GEO.stato = ''; return; }
+  if (GEO.cache.has(nq)) { GEO.q = nq; GEO.res = GEO.cache.get(nq); GEO.stato = 'ok'; return; }
+  if (navigator.onLine === false) { GEO.q = nq; GEO.res = []; GEO.stato = 'offline'; return; }
+  GEO.stato = 'cerco';
+  GEO.timer = setTimeout(async () => {
+    if (GEO.ctl) GEO.ctl.abort();
+    const ctl = GEO.ctl = new AbortController();
+    let res = [], stato = 'ok';
+    const chiedi = async s => { try { return await photon(s, origin(), ctl.signal); } catch (e) { if (ctl.signal.aborted) throw e; return await nominatim(s + ', Barcelona', ctl.signal); } };
+    const via = nq.replace(/\s*\d.*$/, ''), suVia = r => r.some(x => x.hn && norm(x.via).includes(via));
+    try {
+      res = await chiedi(q);
+      /* "42b": la lettera confonde i geocoder, che il 42 lo trovano subito. Si riprova se nessun civico sta sulla via scritta */
+      const senza = q.replace(/(\d+)\s*[a-zA-Z]\b/, '$1');
+      if (senza !== q && !suVia(res)) { const r2 = await chiedi(senza); if (suVia(r2)) res = r2.concat(res); }
+    } catch (e) { if (ctl.signal.aborted) return; stato = 'errore'; }
+    if (ctl !== GEO.ctl) return;
+    const out = perCivico(res);   // la lista poi ordina per distanza, come tutto il resto
+    GEO.q = nq; GEO.res = out; GEO.stato = stato; if (stato === 'ok') GEO.cache.set(nq, out);
+    const inp = $('#lQ'); if (!inp || norm(inp.value) !== nq) return;   // intanto hai scritto altro
+    cerca(q); refreshFind(); drawBody(); if (CERCA.res.length) fitTrovati();
+  }, 450);
 }
 const trovatiGeo = () => ({ type: 'FeatureCollection', features: CERCA.res.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(p.p) }, properties: { id: p.id, s: p.n } })) });
 function apriMaps(p) {
@@ -265,9 +326,9 @@ function apriMaps(p) {
 }
 /* la ricerca guarda solo i dintorni caricati: se sei lontano, la mappa si avvicina da sola */
 function eseguiCerca(q, avvicina) {
-  cerca(q); refreshFind(); drawBody();
+  cercaCivico(q); cerca(q); refreshFind(); drawBody();
   if (!q) return;
-  if (avvicina && M.ready && !CERCA.res.length && M.map.getZoom() < 15.2) {
+  if (avvicina && M.ready && !CERCA.res.length && M.map.getZoom() < 15.2 && !haCivico(q)) {
     M.map.easeTo({ zoom: 15.6, duration: 700 });
     M.map.once('idle', () => { cerca(q); refreshFind(); drawBody(); if (CERCA.res.length) fitTrovati(); });
   } else if (CERCA.res.length) fitTrovati();
@@ -287,7 +348,9 @@ function drawBody() {
     const n = CERCA.res.length;
     const testa = '<div class="sec"><div class="sh"><span class="eyebrow">' + (n ? n + (n === 1 ? ' risultato' : ' risultati') : 'Nessun risultato') + ' per “' + escq(CERCA.q) + '”</span>' + (n ? '<small>due tocchi per aprirlo in Maps</small>' : '') + '</div>';
     const corpo = n ? CERCA.res.slice(0, 14).map(row).join('') + (n > 14 ? '<div class="hint">e altri ' + (n - 14) + ', arancioni sulla mappa</div>' : '')
-      : '<div class="hint">' + (M.ready && M.map.getZoom() < 15 ? 'Avvicina la mappa alla zona che ti interessa: i posti compaiono da vicino.' : 'Prova con un\'altra parola: bar, ristorante, farmacia, supermercato, bagno, gelato.') + '</div>';
+      : '<div class="hint">' + (haCivico(CERCA.q)
+        ? (GEO.stato === 'cerco' ? 'Cerco il civico su OpenStreetMap…' : GEO.stato === 'offline' ? 'Per trovare un civico serve la rete: i numeri civici non stanno nelle mappe scaricate.' : GEO.stato === 'errore' ? 'Il servizio degli indirizzi non risponde: riprova tra poco.' : 'Nessun civico trovato: scrivi via e numero, per esempio Numància 33 o Can Bruixa 42.')
+        : (M.ready && M.map.getZoom() < 15 ? 'Avvicina la mappa alla zona che ti interessa: i posti compaiono da vicino.' : 'Prova con un\'altra parola: bar, ristorante, farmacia, supermercato, bagno, gelato.')) + '</div>';
     $('#lBody').innerHTML = det + testa + corpo + '</div>';
     legaRighe();
     return;
