@@ -10,6 +10,7 @@ import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
+import { openNav } from './nav.js';
 
 /* il worker di MapLibre viene impacchettato da Vite come modulo separato */
 setWorkerUrl(mapWorkerUrl);
@@ -213,15 +214,13 @@ function detail(p) {
   else if (r.best === 'walk') { main = '<b>A piedi, ' + r.walk + ' min</b> ' + from + ', ' + fmtKm(r.dist) + (r.real ? ', sul percorso disegnato.' : '.'); if (r.metro && r.walk > 15) alt = 'In metro circa ' + r.metro.tot + ' min: ' + metroTxt(r.metro) + '.'; }
   else if (r.best === 'metro') { ico = ICONS.rail; main = '<b>In metro, circa ' + r.metro.tot + ' min.</b> ' + (r.metro.toSants > 1 ? r.metro.toSants + ' min a piedi fino a Sants Estació, poi ' : '') + metroTxt(r.metro) + '.'; alt = 'A piedi sarebbero ' + r.walk + ' min, ' + fmtKm(r.dist) + '.'; }
   else { ico = ICONS.rail; main = '<b>Con i mezzi.</b> Sei lontano da Sants: apri le indicazioni e prendi la soluzione proposta.'; alt = 'A piedi ' + r.walk + ' min, ' + fmtKm(r.dist) + '.'; }
-  const dest = p.p[0].toFixed(5) + ',' + p.p[1].toFixed(5), org = r.you ? '' : '&origin=' + HOTEL[0] + ',' + HOTEL[1];
-  const gm = mode => 'https://www.google.com/maps/dir/?api=1&destination=' + dest + org + '&travelmode=' + mode;
   const chips = (p.h ? '<span class="chip">' + ICONS.clock + p.h + '</span>' : '') + (p.book ? '<span class="chip warn">Prenota prima</span>' : '') + (p.sun ? '<span class="chip">Bello al tramonto</span>' : '');
   const hotel = p.id === 'hotel';
   return '<div class="card pdet" style="--c:' + zona(p).c + '"><div class="pdh"><i class="zdot"></i><div class="pt"><b>' + escq(p.n) + '</b><span>' + escq(p.a || zona(p).n) + '</span></div>' +
     (hotel || p.poi ? '' : '<button class="ibtn' + (S.pl.want[p.id] ? ' on' : '') + '" id="lWant" aria-label="Da vedere">' + ICONS.star + '</button><button class="ibtn' + (S.pl.done[p.id] ? ' ok' : '') + '" id="lDone" aria-label="Fatto">' + ICONS.check + '</button>') + '</div>' +
     (p.d ? '<p>' + escq(p.d) + '</p>' : '') + (chips ? '<div class="chips">' + chips + '</div>' : '') +
     '<div class="rte"><span class="mi">' + ico + '</span><div>' + main + (alt ? '<small>' + alt + '</small>' : '') + '</div></div>' +
-    '<div class="acts"><a class="btn' + (r.best === 'walk' ? ' tealb' : '') + '" href="' + gm('walking') + '" target="_blank" rel="noopener">' + ICONS.road + 'A piedi</a><a class="btn' + (r.best === 'walk' ? '' : ' tealb') + '" href="' + gm('transit') + '" target="_blank" rel="noopener">' + ICONS.rail + 'Con i mezzi</a></div></div>';
+    '<div class="acts"><button class="btn' + (r.best === 'walk' ? ' tealb' : '') + '" data-nav="walking">' + ICONS.road + 'A piedi</button><button class="btn' + (r.best === 'walk' ? '' : ' tealb') + '" data-nav="transit">' + ICONS.rail + 'Con i mezzi</button></div></div>';
 }
 function row(p) {
   const r = route(p), on = sel === p.id;
@@ -320,10 +319,8 @@ function cercaCivico(q) {
   }, 450);
 }
 const trovatiGeo = () => ({ type: 'FeatureCollection', features: CERCA.res.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(p.p) }, properties: { id: p.id, s: p.n } })) });
-function apriMaps(p) {
-  const r = route(p), org = r.you ? '' : '&origin=' + HOTEL[0] + ',' + HOTEL[1];
-  window.open('https://www.google.com/maps/dir/?api=1&destination=' + p.p[0].toFixed(5) + ',' + p.p[1].toFixed(5) + org + '&travelmode=walking', '_blank', 'noopener');
-}
+/* chiede con quale app aprire il percorso; se non sei a Barcellona la partenza è l'hotel */
+function apriMaps(p, mode) { const r = route(p); openNav({ p: p.p, name: p.n, mode: mode || 'walking', from: r.you ? null : HOTEL }); }
 /* la ricerca guarda solo i dintorni caricati: se sei lontano, la mappa si avvicina da sola */
 function eseguiCerca(q, avvicina) {
   cercaCivico(q); cerca(q); refreshFind(); drawBody();
@@ -377,6 +374,8 @@ function drawBody() {
 /* un tocco apre la scheda, due tocchi ravvicinati aprono Google Maps */
 const DUE = { t: 0, id: '' };
 function legaRighe() {
+  const p = sel && byId(sel);
+  $$('#lBody [data-nav]').forEach(b => b.onclick = () => { if (p) apriMaps(p, b.dataset.nav); });
   $$('#lBody .prow').forEach(b => b.onclick = () => {
     const id = b.dataset.id, ora = Date.now();
     if (id === DUE.id && ora - DUE.t < 600) { DUE.t = 0; const p = byId(id); if (p) { sfx('tick'); apriMaps(p); return; } }

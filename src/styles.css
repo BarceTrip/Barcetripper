@@ -420,6 +420,17 @@ svg{display:block}
 .tabbar button.sos[aria-selected=true]{color:var(--coral)}
 .tabbar button.sos[aria-selected=true]::before{background:var(--coral);opacity:.16}
 
+/* ============ Scelta dell'app per il percorso ============ */
+.sheet{position:fixed;inset:0;z-index:72;display:none}
+.sheet.on{display:block}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.45);animation:pgin .2s}
+.sheet-box{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:536px;margin:0 auto;background:var(--card);border-radius:22px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);animation:shin .26s cubic-bezier(.2,.7,.2,1)}
+@keyframes shin{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.sheet-box .eyebrow{margin:0 4px 4px}
+.sheet-box .btn{width:100%;height:54px;justify-content:flex-start;gap:14px;padding:0 16px;background:var(--card2)}
+.sheet-box .btn .ic{width:22px;height:22px;color:var(--teal)}
+.sheet-box .btn.ghost{justify-content:center;background:none;color:var(--ink2);height:46px}
+
 /* ============ Varie ============ */
 .bigtxt{position:fixed;inset:0;z-index:70;background:#fff;color:#000;display:none;place-items:center;padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));text-align:center;font-size:min(11vw,60px);font-weight:800;line-height:1.15;letter-spacing:-.03em;overflow:auto}
 .bigtxt.on{display:grid}

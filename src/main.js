@@ -18,6 +18,7 @@ import { drawValigia } from './ui/valigia.js';
 import { drawDocumenti } from './ui/documenti.js';
 import { drawSalute } from './ui/salute.js';
 import { frasiStop } from './ui/frasi.js';
+import { closeNav } from './ui/nav.js';
 
 /* ---- schede ---- */
 const TABS = [
@@ -59,6 +60,7 @@ document.addEventListener('click', e => { if (e.target.closest('.gear')) { sfx('
 function closeOverlays() {
   const b = $('#bigtxt'); if (b && b.classList.contains('on')) b.classList.remove('on');
   const d = $('#docview'); if (d && d.classList.contains('on')) { d.classList.remove('on'); d.innerHTML = ''; }
+  closeNav();
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlays(); });
 

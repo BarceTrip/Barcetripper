@@ -1,7 +1,7 @@
 /* Pagina "Salute": numeri sanitari, dove andare a Barcellona e la scheda medica personale.
    La scheda resta solo su questo telefono, come i Documenti: non passa da nessun server. */
 import { SALUTE_NUM, SALUTE_LUOGHI, FARMACIE_TURNO, MED_CAMPI } from '../data/salute.js';
-import { G } from '../data/places.js';
+import { openNav } from './nav.js';
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
@@ -9,7 +9,6 @@ import { sfx } from '../audio/sfx.js';
 import { showBig } from './sos.js';
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const nav = p => G + p[0].toFixed(5) + ',' + p[1].toFixed(5) + '&travelmode=walking';
 
 /* la scheda in due lingue, a tutto schermo, da mostrare al medico */
 function schedaGrande() {
@@ -34,7 +33,7 @@ export function drawSalute() {
     '<div class="pt"><b>' + l.n + '</b><span>' + l.t + ' · ' + l.a + '</span></div></div><p>' + l.d + '</p>' +
     '<div class="chips"><span class="chip">' + ICONS.clock + l.h + '</span></div>' +
     '<div class="acts">' + (l.tel ? '<a class="btn" href="tel:' + l.tel + '">' + ICONS.phone + 'Chiama</a>' : '') +
-    '<a class="btn tealb" href="' + nav(l.p) + '" target="_blank" rel="noopener">' + ICONS.nav + 'Portami lì</a></div></div>').join('');
+    '<button class="btn tealb" data-nav="' + l.id + '">' + ICONS.nav + 'Portami lì</button></div></div>').join('');
 
   const campi = MED_CAMPI.map(([k, it, es, ph, tipo]) => '<label class="medf"><span>' + it + '<i>' + es + '</i></span>' +
     (tipo === 'area' ? '<textarea id="md_' + k + '" rows="2" placeholder="' + esc(ph) + '">' + esc(m[k] || '') + '</textarea>'
@@ -57,6 +56,7 @@ export function drawSalute() {
     '<div class="acts" style="margin-top:10px">' + (m.emerT ? '<a class="btn tealb" href="tel:' + esc(m.emerT) + '">' + ICONS.phone + 'Chiama ' + esc(m.emerN || 'il contatto') + '</a>' : '') + '<button class="btn ghost" id="mdSave2">Salva</button></div></div></div>' +
     '<div class="about">La scheda e i farmaci restano su questo telefono, non passano da internet.</div>';
 
+  $$('#pSalute [data-nav]').forEach(b => b.onclick = () => { const l = SALUTE_LUOGHI.find(x => x.id === b.dataset.nav); if (l) openNav({ p: l.p, name: l.n, mode: 'walking' }); });
   const leggi = () => {
     MED_CAMPI.forEach(([k]) => { const el = $('#md_' + k); if (el) S.med[k] = el.value.trim(); });
     const en = $('#mdEN'), et = $('#mdET'); if (en) S.med.emerN = en.value.trim(); if (et) S.med.emerT = et.value.trim();

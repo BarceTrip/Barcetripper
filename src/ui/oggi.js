@@ -4,7 +4,8 @@ import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
-import { weatherFor, WX_ICONS, deg } from '../weather.js';
+import { weatherFor, WX_ICONS, deg, stepPos } from '../weather.js';
+import { openNav } from './nav.js';
 import { bagStrip, bagStripBind } from './valigia.js';
 
 export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -62,7 +63,7 @@ export function drawOggi(dir) {
   }).join('') + '</span></div></div>' : '';
   let acts = '';
   if (s.tel) acts += '<a class="btn" href="tel:' + s.tel + '">' + ICONS.phone + 'Chiama</a>';
-  if (s.nav) acts += '<a class="btn dk" href="' + s.nav + '" target="_blank" rel="noopener">' + ICONS.nav + 'Indicazioni</a>';
+  if (s.nav) acts += '<button class="btn dk" id="bNav">' + ICONS.nav + 'Indicazioni</button>';
   if (s.docs) acts += '<button class="btn dk" id="bDocs">' + ICONS.doc + 'Documenti</button>';
   acts = acts ? '<div class="acts">' + acts + '</div>' : '';
 
@@ -99,6 +100,8 @@ export function drawOggi(dir) {
   $('#bNext').onclick = () => emit('advance', 1);
   const nb = $('#bNow'); if (nb) nb.onclick = () => { sfx('tick'); emit('goto', ni); };
   const bd = $('#bDocs'); if (bd) bd.onclick = () => { sfx('tick'); emit('open', 'documenti'); };
+  /* la tappa ha il link Google già scritto: destinazione e modalità si leggono da lì, le coordinate dal meteo */
+  const bn = $('#bNav'); if (bn) bn.onclick = () => { const u = new URL(s.nav); openNav({ p: stepPos(s), q: u.searchParams.get('destination'), name: s.place, mode: u.searchParams.get('travelmode') || 'walking' }); };
   $$('#pOggi .tile').forEach(b => b.onclick = () => {
     const k = +b.dataset.k; S.checks[S.i] = S.checks[S.i] || []; S.checks[S.i][k] = !S.checks[S.i][k];
     sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(0);

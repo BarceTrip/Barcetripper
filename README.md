@@ -45,6 +45,7 @@ src/data/frasi.js     le frasi in spagnolo con traduzione
 src/data/salute.js    numeri e punti sanitari, campi della scheda medica
 src/ui/confetti.js    coriandoli a fine viaggio
 src/ui/dom.js         helper: $, toast, intestazione pagina, bus eventi
+src/ui/nav.js         foglio "Apri il percorso con": Mappe di Apple, Google Maps, HERE WeGo
 src/audio/sfx.js      effetti sonori
 src/audio/music.js    rumba catalana generativa
 src/notify.js         avvisi 30 minuti prima + export ICS
@@ -61,7 +62,7 @@ Si tocca solo `src/data/steps.js`: un oggetto nell'array `STEPS`, in ordine cron
 
 ## Interfaccia
 
-Cinque schede in basso: Oggi, Percorso, Spese, Luoghi, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. La scheda aperta ha una pillola dietro l'icona. Nella tessera Oggi c'è il riassunto della tappa (`det`) e, sotto i tasti, cosa viene dopo. Nel Percorso l'intestazione del giorno resta in vista mentre scorri (per questo `html`, `body` e `main` usano `overflow-x:clip`, non `hidden`). Il budget si cambia nella tessera Spese, e una spesa tolta per sbaglio si recupera con Annulla nel toast. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
+Cinque schede in basso: Oggi, Percorso, Spese, Luoghi, SOS. Le impostazioni si aprono dall'ingranaggio in alto a destra e sono una pagina, non un foglio sovrapposto. Nessun elemento galleggia sopra il contenuto mentre scorri. La scheda aperta ha una pillola dietro l'icona. Nella tessera Oggi c'è il riassunto della tappa (`det`) e, sotto i tasti, cosa viene dopo. Nel Percorso l'intestazione del giorno resta in vista mentre scorri (per questo `html`, `body` e `main` usano `overflow-x:clip`, non `hidden`). Il budget si cambia nella tessera Spese, e una spesa tolta per sbaglio si recupera con Annulla nel toast. Ogni tasto Indicazioni, Portami lì, A piedi o Con i mezzi apre un foglio che chiede con quale app aprire il percorso: Mappe di Apple, Google Maps o HERE WeGo (`src/ui/nav.js`); nei dati delle tappe il campo `nav` resta un link Google, da cui si leggono destinazione e modalità. Per aprire una scheda direttamente: `?tab=spese` (anche `valigia`), e `&theme=light` per forzare il tema (comodo per i test).
 
 ## Valigia
 
