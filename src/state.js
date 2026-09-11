@@ -6,15 +6,15 @@ const KEY = 'viaggio';
 export const S = {
   i: 0, tab: 'step', checks: {}, theme: 'dark', notified: {},
   exp: [], budget: 3500, budgetSet: false, cat: 0,
-  seeded: false, seedV2: false, seedV3: false, stepsV2: false, snd: true, music: true,
+  seeded: false, seedV2: false, seedV3: false, stepsV2: false, stepsV3: false, snd: true, music: true,
   bag: { mode: 'out', checks: {}, custom: [], hidden: [] },   // valigia: andata/ritorno, spunte, oggetti aggiunti, predefiniti tolti
   pl: { want: {}, done: {}, zoom: 'near' },                      // luoghi: da vedere, fatti, zoom della mappa
   med: { meds: [] },                                             // scheda medica: solo su questo telefono
 };
 
 export function save() {
-  const { i, checks, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, stepsV2, snd, music, bag, pl, med } = S;
-  try { localStorage.setItem(KEY, JSON.stringify({ i, checks, snd, music, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, stepsV2, bag, pl, med })); } catch (e) {}
+  const { i, checks, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, stepsV2, stepsV3, snd, music, bag, pl, med } = S;
+  try { localStorage.setItem(KEY, JSON.stringify({ i, checks, snd, music, theme, notified, exp, budget, budgetSet, seeded, seedV2, seedV3, stepsV2, stepsV3, bag, pl, med })); } catch (e) {}
 }
 
 export function load() {
@@ -33,7 +33,7 @@ export function load() {
         S.budget = d.budget; S.budgetSet = !!d.budgetSet;
         if ((S.budget === 1200 || S.budget === 2500) && !S.budgetSet) S.budget = 3500;
       }
-      S.seeded = !!d.seeded; S.seedV2 = !!d.seedV2; S.seedV3 = !!d.seedV3; S.stepsV2 = !!d.stepsV2;
+      S.seeded = !!d.seeded; S.seedV2 = !!d.seedV2; S.seedV3 = !!d.seedV3; S.stepsV2 = !!d.stepsV2; S.stepsV3 = !!d.stepsV3;
       if (d.bag && typeof d.bag === 'object') S.bag = { mode: d.bag.mode === 'back' ? 'back' : 'out', checks: d.bag.checks || {}, custom: Array.isArray(d.bag.custom) ? d.bag.custom : [], hidden: Array.isArray(d.bag.hidden) ? d.bag.hidden : [] };
       if (d.med && typeof d.med === 'object') S.med = { ...d.med, meds: Array.isArray(d.med.meds) ? d.med.meds : [] };
       if (d.pl && typeof d.pl === 'object') S.pl = { want: d.pl.want || {}, done: d.pl.done || {}, zoom: d.pl.zoom === 'city' ? 'city' : 'near' };
@@ -63,5 +63,13 @@ export function load() {
     S.checks = shift(S.checks); S.notified = shift(S.notified);
     if (S.i >= 7) S.i = Math.min(S.i + 2, STEPS.length - 1);
     S.stepsV2 = true; save();
+  }
+  /* 11 settembre 2026: la tappa dal sarto (posizione 7) è stata tolta, dall'aeroporto si va dritti al locker e in hotel.
+     Le spunte della tappa 7 si buttano, tutto quello che veniva dopo torna indietro di uno. */
+  if (!S.stepsV3) {
+    const shift = o => { const r = {}; for (const k in o) { const n = +k; if (n === 7) continue; r[Number.isFinite(n) && n > 7 ? n - 1 : k] = o[k]; } return r; };
+    S.checks = shift(S.checks); S.notified = shift(S.notified);
+    if (S.i > 7) S.i = Math.max(0, Math.min(S.i - 1, STEPS.length - 1));
+    S.stepsV3 = true; save();
   }
 }

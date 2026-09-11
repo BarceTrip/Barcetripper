@@ -23,6 +23,7 @@ Dopo la pubblicazione, su iPhone: Safari, Condividi, "Aggiungi alla schermata Ho
 ## Struttura
 
 ```
+VIAGGIO.md            riassunto del viaggio, indipendente dall'app: da dare come riferimento ad altri progetti
 index.html            shell: sei pagine vuote e la tab bar
 src/main.js           avvio, schede, navigazione fra tappe, impostazioni
 src/styles.css        tutto lo stile (tema ispirato a Bring!)

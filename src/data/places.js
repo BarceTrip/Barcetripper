@@ -14,7 +14,6 @@ export const P = {
   BCNP:  [41.2974, 2.0833],
   BCN2:  [41.3030, 2.0760],
   ABBAP: [41.3826, 2.1400],
-  SARTO: [41.38953, 2.13519],   // Tailor & Co., centro L'Illa Diagonal, Avinguda Diagonal 557
   LOCKER:[41.38249, 2.13949],   // locker InPost ES-32234, Carrer de Numància 33
   RIVP:  [41.7565, 12.2302],
   MONTI: [41.8947, 12.4925],
