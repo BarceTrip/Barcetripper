@@ -3,7 +3,7 @@
 import { BAG_CATS, BAG_ITEMS, BAG_BACK_CAT } from '../data/valigia.js';
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
-import { $, $$, toast, header, emit } from './dom.js';
+import { $, $$, toast, header, emit, tileTxt } from './dom.js';
 import { sfx } from '../audio/sfx.js';
 import { confetti } from './confetti.js';
 
@@ -41,7 +41,7 @@ const BAG_SVG = '<svg viewBox="0 0 134 134" fill="none" stroke="currentColor" st
   '<path d="M28 116h54M28 112v8M82 112v8"/><path d="M108 34v72M104 34h8M104 106h8"/><path d="M22 28l14-12"/>' +
   '<g font-size="11" font-weight="800" fill="currentColor" stroke="none" text-anchor="middle"><text x="55" y="129">30 cm</text><text x="122" y="74">40</text><text x="22" y="13">20</text></g></svg>';
 
-const tile = (x, ok) => '<button class="tile' + (ok ? ' ok' : '') + (edit ? ' rm' : '') + '" data-id="' + x.id + '"><span class="ti">' + (edit ? ICONS.x : ICONS.check) + '</span><span class="tt">' + esc(x.t) + '</span></button>';
+const tile = (x, ok) => '<button class="tile' + (ok ? ' ok' : '') + (edit ? ' rm' : '') + '" data-id="' + x.id + '"><span class="ti">' + (edit ? ICONS.x : ICONS.check) + '</span><span class="tt">' + tileTxt(x.t) + '</span></button>';
 
 /* cambio andata/ritorno: le spunte si azzerano, gli oggetti (anche quelli aggiunti) restano */
 function switchMode(mode) {

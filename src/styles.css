@@ -53,6 +53,7 @@ svg{display:block}
 .ibtn:active{transform:scale(.94)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 18px;border-radius:14px;font-weight:700;font-size:15.5px;background:var(--card);color:var(--ink);transition:transform .12s,opacity .12s}
 .btn:active{transform:scale(.97)}
+.card .btn{background:var(--card2)}   /* dentro una tessera il tasto neutro deve staccarsi dal fondo */
 .btn.pri{background:var(--coral);color:#fff}
 .btn.tealb{background:var(--teal);color:#fff}
 .btn.ghost{background:var(--card2)}
@@ -144,6 +145,7 @@ svg{display:block}
 .tile .ti{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.7);display:grid;place-items:center;align-self:flex-end}
 .tile .ti .ic{width:16px;height:16px;opacity:0}
 .tile .tt{font-size:13.5px;font-weight:700;line-height:1.25;letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;-webkit-hyphenate-limit-before:4;-webkit-hyphenate-limit-after:4;min-width:0}
+.tile .tt .nh{hyphens:none;-webkit-hyphens:none;font-size:11px;letter-spacing:-.03em;white-space:nowrap}   /* un codice su una riga sola */
 .tile.ok{background:var(--teal-2);box-shadow:none}
 .tile.ok .ti{background:#fff;border-color:#fff} .tile.ok .ti .ic{opacity:1;color:var(--teal-2)}
 .tile.ok .tt{opacity:.85}

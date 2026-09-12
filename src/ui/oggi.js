@@ -2,7 +2,7 @@
 import { STEPS } from '../data/steps.js';
 import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
-import { $, $$, toast, header, emit } from './dom.js';
+import { $, $$, toast, header, emit, tileTxt } from './dom.js';
 import { sfx } from '../audio/sfx.js';
 import { weatherFor, WX_ICONS, deg, stepPos } from '../weather.js';
 import { openNav } from './nav.js';
@@ -48,7 +48,7 @@ function shortDay(x) {
   return isNaN(d) ? '' : d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }).replace('.', '');
 }
 const route = () => '<div class="route">' + STEPS.map((s, k) => '<i style="--c:var(--' + s.mode + ')" class="' + (k < S.i ? 'done' : k === S.i ? 'now' : '') + '"></i>').join('') + '</div>';
-const tile = (txt, k, ok) => '<button class="tile' + (ok ? ' ok' : '') + '" data-k="' + k + '"><span class="ti">' + ICONS.check + '</span><span class="tt">' + txt + '</span></button>';
+const tile = (txt, k, ok) => '<button class="tile' + (ok ? ' ok' : '') + '" data-k="' + k + '"><span class="ti">' + ICONS.check + '</span><span class="tt">' + tileTxt(txt) + '</span></button>';
 
 /* dir: 1 avanti, -1 indietro, 0 nessuna animazione */
 export function drawOggi(dir) {

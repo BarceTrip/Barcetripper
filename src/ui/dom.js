@@ -1,6 +1,9 @@
 import { ICONS } from "../icons.js";
 export const $ = s => document.querySelector(s);
 export const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/* testo di una tessera: codici, numeri e sigle non vanno sillabati ("BC/20CQ-X44UMN") */
+export const tileTxt = s => esc(s).replace(/\S*[\d\/]\S*/g, m => m.length >= 5 ? '<span class="nh">' + m + '</span>' : m);
 
 /* act: {label, fn} aggiunge un tasto (es. Annulla) e tiene il toast in vista più a lungo */
 export function toast(m, act) {

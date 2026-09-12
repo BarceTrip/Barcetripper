@@ -23,11 +23,11 @@ export function drawSos() {
   $('#pSos').innerHTML = header('Numeri, hotel, codici, frasi', 'Emergenza', { coral: true }) +
     '<div class="calls">' +
     call('112', '112', 'Polizia, ambulanza, vigili del fuoco. Vale in Spagna e in Italia', 1) +
+    call('+34930338000', 'Consolato', "Carrer d'Aribau 185 · al telefono lun-ven 9:30-11:30 · sportello 9:30-13, il martedì 14:30-17:30", 0, 1) +
     call('088', '088', "Mossos d'Esquadra, polizia catalana") +
-    call('+34930338000', 'Consolato', "Carrer d'Aribau 185 · al telefono lun-ven 9:30-11:30 · sportello 9:30-13, il martedì 14:30-17:30") +
+    call(h.tel, 'Hotel', h.name) +
     call('+34659790266', 'Reperibilità', 'Funzionario di turno del Consolato: feriali 18-22, weekend e festivi 9-22. Solo emergenze gravi') +
-    call('+390636912666', 'Farnesina', 'Funzionario di turno del Ministero, quando la reperibilità del Consolato è chiusa. Solo emergenze gravi') +
-    call(h.tel, 'Hotel', h.name, 0, 1) + '</div>' +
+    call('+390636912666', 'Farnesina', 'Funzionario di turno del Ministero, quando la reperibilità del Consolato è chiusa. Solo emergenze gravi') + '</div>' +
     '<button class="btn tealb wide" id="bSalute">' + ICONS.cross + 'Salute e scheda medica</button>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Dove alloggi adesso</span></div><div class="card hot"><b>' + h.name + '</b><div class="ad">' + h.addr + '</div><div class="hr">' +
     '<button class="btn tealb" id="bShowAddr">' + ICONS.big + 'Mostra al tassista</button>' + (h === ABBA ? '<button class="btn" id="bGoHotel">' + ICONS.nav + 'Portami in hotel</button>' : '') + '</div></div></div>' +
