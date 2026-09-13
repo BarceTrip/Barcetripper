@@ -522,3 +522,11 @@ svg{display:block}
 .doc .dt b{cursor:text;border-bottom:1px dashed var(--line2)}
 .doc .dren{width:100%;min-width:0;font:inherit;font-weight:700;background:var(--card2);color:var(--ink);border:0;border-radius:8px;padding:4px 8px;outline:2px solid var(--teal)}
 @media (prefers-reduced-motion:reduce){.tile.armed{animation:none}.bye{animation-duration:.01s!important}}
+
+/* ============ Foto dei luoghi ============ */
+.pdet.pfoto{position:relative;overflow:hidden;isolation:isolate}
+.pdet.pfoto::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--ph) center 45%/cover no-repeat;opacity:.5;-webkit-mask-image:linear-gradient(100deg,transparent 18%,#000 62%);mask-image:linear-gradient(100deg,transparent 18%,#000 62%)}
+.pdet.pfoto::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent 46%,var(--card) 88%)}
+[data-theme=light] .pdet.pfoto::before{opacity:.55}
+.pdet.pfoto .pdh b,.pdet.pfoto .pdh span{text-shadow:0 1px 2px rgba(0,0,0,.35)} [data-theme=light] .pdet.pfoto .pdh b,[data-theme=light] .pdet.pfoto .pdh span{text-shadow:0 1px 2px rgba(255,255,255,.7)}
+.crediti{margin-top:12px;font-size:12px;color:var(--ink3)} .crediti summary{cursor:pointer;font-weight:700} .crediti ul{margin:8px 0 0 16px;line-height:1.5} .crediti b{font-weight:700;color:var(--ink2)}

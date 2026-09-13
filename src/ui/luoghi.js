@@ -11,6 +11,7 @@ import { S, save } from '../state.js';
 import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
 import { openNav } from './nav.js';
+import { FOTO } from '../data/foto.js';
 
 /* il worker di MapLibre viene impacchettato da Vite come modulo separato */
 setWorkerUrl(mapWorkerUrl);
@@ -216,7 +217,8 @@ function detail(p) {
   else { ico = ICONS.rail; main = '<b>Con i mezzi.</b> Sei lontano da Sants: apri le indicazioni e prendi la soluzione proposta.'; alt = 'A piedi ' + r.walk + ' min, ' + fmtKm(r.dist) + '.'; }
   const chips = (p.h ? '<span class="chip">' + ICONS.clock + p.h + '</span>' : '') + (p.book ? '<span class="chip warn">Prenota prima</span>' : '') + (p.sun ? '<span class="chip">Bello al tramonto</span>' : '');
   const hotel = p.id === 'hotel';
-  return '<div class="card pdet" style="--c:' + zona(p).c + '"><div class="pdh"><i class="zdot"></i><div class="pt"><b>' + escq(p.n) + '</b><span>' + escq(p.a || zona(p).n) + '</span></div>' +
+  const ph = FOTO.has(p.id);   // foto del luogo in trasparenza, solo per i posti segnalati
+  return '<div class="card pdet' + (ph ? ' pfoto' : '') + '" style="--c:' + zona(p).c + (ph ? ";--ph:url('/img/luoghi/" + p.id + ".webp')" : '') + '"><div class="pdh"><i class="zdot"></i><div class="pt"><b>' + escq(p.n) + '</b><span>' + escq(p.a || zona(p).n) + '</span></div>' +
     (hotel || p.poi ? '' : '<button class="ibtn' + (S.pl.want[p.id] ? ' on' : '') + '" id="lWant" aria-label="Da vedere">' + ICONS.star + '</button><button class="ibtn' + (S.pl.done[p.id] ? ' ok' : '') + '" id="lDone" aria-label="Fatto">' + ICONS.check + '</button>') + '</div>' +
     (p.d ? '<p>' + escq(p.d) + '</p>' : '') + (chips ? '<div class="chips">' + chips + '</div>' : '') +
     '<div class="rte"><span class="mi">' + ico + '</span><div>' + main + (alt ? '<small>' + alt + '</small>' : '') + '</div></div>' +

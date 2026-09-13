@@ -4,6 +4,8 @@ import { STEPS } from '../data/steps.js';
 import { S } from '../state.js';
 import { $, header } from './dom.js';
 import { musicOn } from '../audio/music.js';
+import { CREDITI } from '../data/foto.js';
+import { PLACES } from '../data/luoghi.js';
 
 const THEME_COLOR = { dark: '#28353D', light: '#F4EFE8' };
 
@@ -32,5 +34,7 @@ export function drawSettings() {
     row('sTheme', ICONS.sunI, '<span id="themeLbl">Tema scuro</span>', null, 'swTheme') +
     row('sSnd', ICONS.sound, 'Suoni', null, 'swSnd') +
     row('sMus', ICONS.music, 'Rumba catalana', [null, 'Parte al primo tocco sullo schermo'], 'swMus') + '</div>' +
-    '<div class="about">BarceTrip · 15–20 settembre 2026</div>';
+    '<div class="about">BarceTrip · 15–20 settembre 2026</div>' +
+    '<details class="crediti"><summary>Foto dei luoghi: Wikimedia Commons, ' + CREDITI.length + ' immagini con licenza libera</summary><ul>' +
+    CREDITI.map(c => { const p = PLACES.find(x => x.id === c.id); return '<li><b>' + (p ? p.n : c.id) + '</b> · ' + c.a + ' · ' + c.l + '</li>'; }).join('') + '</ul></details>';
 }

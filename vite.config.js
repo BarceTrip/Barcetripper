@@ -23,7 +23,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,mjs,css,html,png,svg,ico}'],   // mjs: il worker di PDF.js
+        globPatterns: ['**/*.{js,mjs,css,html,png,svg,ico,webp}'],   // mjs: il worker di PDF.js
         navigateFallback: '/index.html',
         /* tessere, font e rilievo della mappa già visti restano in cache un mese */
         runtimeCaching: [
