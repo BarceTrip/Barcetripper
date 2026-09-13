@@ -446,3 +446,64 @@ svg{display:block}
 #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ============ Celebrazioni ============ */
+.cele{position:fixed;inset:0;pointer-events:none;z-index:60;display:none;overflow:hidden;--c:var(--coral)}
+.cele.on{display:block}
+.cele .flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,var(--c),transparent 68%);opacity:0;animation:flash 1.3s ease-out forwards}
+@keyframes flash{0%{opacity:0}18%{opacity:.5}100%{opacity:0}}
+.cele .stamp{position:absolute;left:50%;top:40%;width:max-content;max-width:86vw;text-align:center;transform:translate(-50%,-50%) rotate(-8deg) scale(3);font-weight:900;font-size:40px;letter-spacing:-.02em;line-height:1.05;color:#fff;background:var(--c);padding:12px 24px;border-radius:18px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;animation:stamp 2s cubic-bezier(.2,.9,.2,1) forwards}
+.cele .stamp small{display:block;font-size:15px;font-weight:700;opacity:.9;margin-top:4px;letter-spacing:0}
+.cele.last .stamp{font-size:34px;animation-duration:4s}
+@keyframes stamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(3)}16%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1)}24%{transform:translate(-50%,-50%) rotate(-6deg) scale(1.1)}32%{transform:translate(-50%,-50%) rotate(-6deg) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) rotate(-6deg) scale(.92)}}
+.cele .mover{position:absolute;width:116px;height:116px;color:var(--c);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
+.cele .mover svg{width:100%;height:100%}
+/* treno: attraversa lo schermo sobbalzando, con gli sbuffi */
+.cele.rail .mover{left:-140px;top:60%;animation:train 2s cubic-bezier(.35,0,.25,1) forwards}
+@keyframes train{0%{transform:translate(0,0)}15%{transform:translate(20vw,-4px)}30%{transform:translate(40vw,3px)}45%{transform:translate(58vw,-4px)}60%{transform:translate(74vw,3px)}100%{transform:translate(calc(100vw + 160px),0)}}
+.cele .puff{position:absolute;left:8%;top:57%;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.8);opacity:0;animation:puff 1.5s ease-out forwards}
+.cele .puff:nth-child(3){left:26%}.cele .puff:nth-child(4){left:44%}.cele .puff:nth-child(5){left:62%}.cele .puff:nth-child(6){left:80%}
+@keyframes puff{0%{opacity:0;transform:translate(0,0) scale(.4)}25%{opacity:.9}100%{opacity:0;transform:translate(-26px,-110px) scale(2.6)}}
+/* aereo: decolla in diagonale con la scia */
+.cele.air .mover{left:-130px;top:80%;animation:plane 2s cubic-bezier(.45,0,.3,1) forwards}
+@keyframes plane{0%{transform:translate(0,0) rotate(-24deg) scale(.8)}100%{transform:translate(calc(100vw + 170px),-64vh) rotate(-24deg) scale(1.1)}}
+.cele .trail{position:absolute;inset:0;width:100%;height:100%}
+.cele .trail path{fill:none;stroke:rgba(255,255,255,.7);stroke-width:1.2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:trail 2s cubic-bezier(.45,0,.3,1) forwards;vector-effect:non-scaling-stroke;stroke-width:6px}
+@keyframes trail{to{stroke-dashoffset:0}}
+/* hotel: campanello che oscilla */
+.cele.stay .mover,.cele.box .mover{left:50%;top:26%;margin:-58px;transform-origin:50% 10%;animation:bell 2s ease-in-out forwards}
+@keyframes bell{0%{opacity:0;transform:rotate(0) scale(.5)}14%{opacity:1;transform:rotate(20deg) scale(1)}28%{transform:rotate(-18deg)}42%{transform:rotate(14deg)}56%{transform:rotate(-9deg)}70%{transform:rotate(5deg)}84%{opacity:1;transform:rotate(0)}100%{opacity:0;transform:rotate(0) scale(.9)}}
+.cele .glow{position:absolute;left:50%;top:26%;width:220px;height:220px;margin:-110px;border-radius:50%;background:radial-gradient(circle,var(--c) 0,transparent 70%);opacity:0;animation:glow 2s ease-out forwards}
+@keyframes glow{0%{opacity:0;transform:scale(.4)}30%{opacity:.7}100%{opacity:0;transform:scale(1.8)}}
+/* giornata libera: sole con i raggi che girano e l'icona che salta */
+.cele .rays{position:absolute;left:50%;top:26%;width:300px;height:300px;margin:-150px;border-radius:50%;opacity:0;background:repeating-conic-gradient(from 0deg,var(--c) 0 9deg,transparent 9deg 30deg);-webkit-mask-image:radial-gradient(circle,transparent 30%,#000 32%,#000 60%,transparent 62%);mask-image:radial-gradient(circle,transparent 30%,#000 32%,#000 60%,transparent 62%);animation:rays 2.4s ease-out forwards}
+.cele.last .rays{animation-duration:4.2s}
+@keyframes rays{0%{opacity:0;transform:rotate(0) scale(.5)}20%{opacity:.5}100%{opacity:0;transform:rotate(140deg) scale(1.3)}}
+.cele.free .mover,.cele.last .mover{left:50%;top:26%;margin:-58px;animation:hop 2s ease-in-out forwards}
+.cele.last .mover{animation-duration:4s}
+@keyframes hop{0%{opacity:0;transform:translateY(40px) scale(.5)}15%{opacity:1;transform:translateY(0) scale(1)}35%{transform:translateY(-22px) rotate(-8deg)}50%{transform:translateY(0) rotate(0)}65%{transform:translateY(-14px) rotate(6deg)}80%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px) scale(.9)}}
+/* strada: l'auto passa e le strisce corrono */
+.cele.road .mover{left:-130px;top:62%;animation:car 1.8s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes car{0%{transform:translate(0,0)}40%{transform:translate(38vw,-2px)}60%{transform:translate(58vw,2px)}100%{transform:translate(calc(100vw + 160px),0)}}
+.cele .lane{position:absolute;left:0;right:0;top:calc(62% + 122px);height:4px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.7) 0 40px,transparent 40px 80px);opacity:0;animation:lane 1.8s linear forwards}
+.cele .lane.l2{top:calc(62% + 134px);opacity:0;animation-delay:.1s}
+@keyframes lane{0%{opacity:0;transform:translateX(0)}20%{opacity:.8}100%{opacity:0;transform:translateX(-240px)}}
+/* banda "tutto pronto" */
+.cele .ban{position:absolute;left:50%;top:22%;transform:translate(-50%,-20px);display:flex;align-items:center;gap:10px;background:var(--c);color:#fff;padding:12px 20px;border-radius:999px;font-weight:800;font-size:18px;box-shadow:0 12px 28px rgba(0,0,0,.3);opacity:0;animation:ban 1.9s cubic-bezier(.2,.9,.2,1) forwards}
+.cele .ban .ic{width:24px;height:24px}
+@keyframes ban{0%{opacity:0;transform:translate(-50%,-30px) scale(.7)}18%{opacity:1;transform:translate(-50%,0) scale(1.06)}28%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-16px)}}
+/* tessere: rimbalzo alla spunta e segno che si disegna */
+.tile.pop{animation:pop .55s cubic-bezier(.3,1.7,.4,1)}
+@keyframes pop{0%{transform:scale(.72)}55%{transform:scale(1.09)}100%{transform:scale(1)}}
+.tile.ok.pop .ti{animation:tick .5s cubic-bezier(.3,1.6,.4,1)}
+@keyframes tick{0%{transform:scale(0) rotate(-120deg)}70%{transform:scale(1.3) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+/* barra delle tappe: la tacca nuova pulsa; la tessera sussulta */
+.route i.now.pulse{animation:nowp 1s ease-out}
+@keyframes nowp{0%{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--c)}45%{box-shadow:0 0 0 2px var(--bg),0 0 0 10px var(--c)}100%{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--c)}}
+.hero.pulse{animation:heropulse .7s cubic-bezier(.3,1.5,.4,1)}
+@keyframes heropulse{0%{transform:scale(.97)}50%{transform:scale(1.015)}100%{transform:scale(1)}}
+.nav2 .btn.next:active .mark{transform:scale(1.2)}
+/* schede: l'icona rimbalza al tocco */
+#tabs button.bump .ic{animation:bump .4s cubic-bezier(.3,1.6,.4,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(-8deg)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.cele .mover,.cele .puff,.cele .rays,.cele .trail,.cele .lane,.cele .glow{display:none}.cele .stamp,.cele .ban{animation-duration:.01s;opacity:1}.tile.pop,.hero.pulse,#tabs button.bump .ic,.route i.now.pulse{animation:none}}

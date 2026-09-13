@@ -6,6 +6,7 @@ import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header } from './dom.js';
 import { sfx } from '../audio/sfx.js';
+import { coin } from './celebra.js';
 
 export const eur = n => n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
@@ -47,7 +48,7 @@ export function drawSpese() {
     if (isNaN(a) || a <= 0) { toast('Inserisci un importo'); return; }
     if (a > 100000) { toast('Importo troppo grande'); return; }
     S.exp.push({ id: Date.now() * 1000 + Math.floor(Math.random() * 1000), amt: Math.round(a * 100) / 100, cat: S.cat, note: $('#xNote').value.trim().slice(0, 40), ts: Date.now() });
-    save(); sfx('coin'); drawSpese();
+    coin($('#xAdd')); save(); sfx('coin'); drawSpese();
   };
   $('#xAdd').onclick = add;
   /* il simbolo € sta subito dopo l'ultima cifra: un gemello invisibile misura quanto è largo il numero */

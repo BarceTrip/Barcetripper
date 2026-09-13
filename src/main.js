@@ -11,7 +11,7 @@ import { drawPercorso, scrollPercorsoToNow } from './ui/percorso.js';
 import { drawSpese } from './ui/spese.js';
 import { drawSos } from './ui/sos.js';
 import { applyTheme, syncSwitches, drawSettings } from './ui/settings.js';
-import { confetti } from './ui/confetti.js';
+import { celebrate } from './ui/celebra.js';
 import { notifInit, notifAsk, icsExport } from './notify.js';
 import { luoghiShow, luoghiPause } from './ui/luoghi.js';
 import { drawValigia } from './ui/valigia.js';
@@ -52,7 +52,7 @@ function show(t, opts = {}) {
   window.scrollTo({ top: 0, behavior: opts.smooth ? 'smooth' : 'auto' });
 }
 $('#tabs').innerHTML = TABS.map(t => '<button role="tab" data-t="' + t.id + '"' + (t.cls ? ' class="' + t.cls + '"' : '') + '>' + t.ico + t.lbl + '</button>').join('');
-$$('#tabs button').forEach(b => b.onclick = () => { if (S.tab !== b.dataset.t) { sfx('tick'); show(b.dataset.t); } else window.scrollTo({ top: 0, behavior: 'smooth' }); });
+$$('#tabs button').forEach(b => b.onclick = () => { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); if (S.tab !== b.dataset.t) { sfx('tick'); show(b.dataset.t); } else window.scrollTo({ top: 0, behavior: 'smooth' }); });
 /* ingranaggio in ogni intestazione, delegato perché le pagine si ridisegnano */
 document.addEventListener('click', e => { if (e.target.closest('.gear')) { sfx('tick'); show('settings'); } });
 
@@ -70,13 +70,11 @@ function goto(k, dir) {
   S.i = k; save(); drawOggi(dir);
   if (S.tab !== 'oggi') show('oggi', { noDraw: true }); else window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-/* suono per tipo di tappa: quelli senza suono proprio fanno il tic secco */
-const SFX_MODE = { rail: 'rail', air: 'air', stay: 'stay', free: 'free' };
+/* avanti: festa per la tappa appena chiusa, gran finale sull'ultima; indietro: solo il suono */
 function advance(d) {
   const n = S.i + d; if (n < 0 || n >= STEPS.length) return;
   const last = n === STEPS.length - 1;
-  if (d > 0) { const m = STEPS[n].mode; sfx(last ? 'done' : (SFX_MODE[m] || 'tick')); if (last) confetti(); } else sfx('back');
-  if (navigator.vibrate) navigator.vibrate(8);
+  if (d > 0) celebrate(STEPS[S.i].mode, last); else { sfx('back'); if (navigator.vibrate) navigator.vibrate(8); }
   goto(n, d);
 }
 on('goto', k => goto(k, k > S.i ? 1 : k < S.i ? -1 : 0));

@@ -5,7 +5,7 @@ import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit, tileTxt } from './dom.js';
 import { sfx } from '../audio/sfx.js';
-import { confetti } from './confetti.js';
+import { tilePop, bagDone } from './celebra.js';
 
 let edit = false;   // modalità "togli oggetti"
 let addCat = 0;     // categoria scelta per l'oggetto nuovo
@@ -120,7 +120,10 @@ export function drawValigia() {
     }
     if (S.bag.checks[id]) delete S.bag.checks[id]; else S.bag.checks[id] = true;
     save();
-    if (S.bag.checks[id] && !bagCount().todo) { sfx('done'); confetti(); } else sfx(S.bag.checks[id] ? 'check' : 'uncheck');
+    const ok = !!S.bag.checks[id], all = ok && !bagCount().todo;
+    if (!all) sfx(ok ? 'pop' : 'uncheck');
     drawValigia();
+    tilePop($('#pValigia .tile[data-id="' + id + '"]'), ok);
+    if (all) setTimeout(() => bagDone(isBack()), 200);
   });
 }

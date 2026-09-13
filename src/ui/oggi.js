@@ -7,6 +7,7 @@ import { sfx } from '../audio/sfx.js';
 import { weatherFor, WX_ICONS, deg, stepPos } from '../weather.js';
 import { openNav } from './nav.js';
 import { bagStrip, bagStripBind } from './valigia.js';
+import { tilePop, allReady } from './celebra.js';
 
 export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const codeTag = s => s.code ? '<span class="code">' + esc(s.code) + '</span>' : '';
@@ -47,7 +48,7 @@ function shortDay(x) {
   const d = new Date(x.at || (x.days && x.days.length ? x.days[0] + 'T12:00' : ''));
   return isNaN(d) ? '' : d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }).replace('.', '');
 }
-const route = () => '<div class="route">' + STEPS.map((s, k) => '<i style="--c:var(--' + s.mode + ')" class="' + (k < S.i ? 'done' : k === S.i ? 'now' : '') + '"></i>').join('') + '</div>';
+const route = dir => '<div class="route">' + STEPS.map((s, k) => '<i style="--c:var(--' + s.mode + ')" class="' + (k < S.i ? 'done' : k === S.i ? 'now' + (dir > 0 ? ' pulse' : '') : '') + '"></i>').join('') + '</div>';
 const tile = (txt, k, ok) => '<button class="tile' + (ok ? ' ok' : '') + '" data-k="' + k + '"><span class="ti">' + ICONS.check + '</span><span class="tt">' + tileTxt(txt) + '</span></button>';
 
 /* dir: 1 avanti, -1 indietro, 0 nessuna animazione */
@@ -92,7 +93,7 @@ export function drawOggi(dir) {
   const planb = s.planB ? '<div class="sec"><div class="sh"><span class="eyebrow">Se va storto</span></div><div class="planb"><div class="mi">' + ICONS.compass + '</div><p>' + s.planB + '</p></div></div>' : '';
 
   /* striscia della valigia: alla partenza (pack "out") e ai check-out (pack "back") */
-  $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route() + (s.pack ? bagStrip(s.pack) : '') +
+  $('#pOggi').innerHTML = header('Tappa ' + (S.i + 1) + ' di ' + STEPS.length, 'Oggi', { gear: true, extra: nowBtn }) + route(dir) + (s.pack ? bagStrip(s.pack) : '') +
     '<div class="sv' + (dir > 0 ? ' in-r' : dir < 0 ? ' in-l' : '') + '" id="sv">' + hero + nav + nextup + ready + notes + planb + '</div>';
   updCd(); loadWx(s); bagStripBind(); marquee();
 
@@ -104,7 +105,10 @@ export function drawOggi(dir) {
   const bn = $('#bNav'); if (bn) bn.onclick = () => { const u = new URL(s.nav); openNav({ p: stepPos(s), q: u.searchParams.get('destination'), name: s.place, mode: u.searchParams.get('travelmode') || 'walking' }); };
   $$('#pOggi .tile').forEach(b => b.onclick = () => {
     const k = +b.dataset.k; S.checks[S.i] = S.checks[S.i] || []; S.checks[S.i][k] = !S.checks[S.i][k];
-    sfx(S.checks[S.i][k] ? 'check' : 'uncheck'); save(); drawOggi(0);
+    const ok = !!S.checks[S.i][k], all = ok && s.ready.every((r, j) => S.checks[S.i][j]);
+    sfx(ok ? 'pop' : 'uncheck'); save(); drawOggi(0);
+    tilePop($('#pOggi .tile[data-k="' + k + '"]'), ok);
+    if (all) setTimeout(() => allReady('Tutto in mano!'), 250);
   });
   $$('#pOggi .chip.copy').forEach(f => f.onclick = () => copyTxt(f.dataset.v));
 }
