@@ -217,7 +217,7 @@ function detail(p) {
   else { ico = ICONS.rail; main = '<b>Con i mezzi.</b> Sei lontano da Sants: apri le indicazioni e prendi la soluzione proposta.'; alt = 'A piedi ' + r.walk + ' min, ' + fmtKm(r.dist) + '.'; }
   const chips = (p.h ? '<span class="chip">' + ICONS.clock + p.h + '</span>' : '') + (p.book ? '<span class="chip warn">Prenota prima</span>' : '') + (p.sun ? '<span class="chip">Bello al tramonto</span>' : '');
   const hotel = p.id === 'hotel';
-  const ph = FOTO.has(p.id);   // foto del luogo in trasparenza, solo per i posti segnalati
+  const ph = FOTO.has(p.id);   // foto del luogo in trasparenza; per i posti personali, la via o il quartiere
   return '<div class="card pdet' + (ph ? ' pfoto' : '') + '" style="--c:' + zona(p).c + (ph ? ";--ph:url('/img/luoghi/" + p.id + ".webp')" : '') + '"><div class="pdh"><i class="zdot"></i><div class="pt"><b>' + escq(p.n) + '</b><span>' + escq(p.a || zona(p).n) + '</span></div>' +
     (hotel || p.poi ? '' : '<button class="ibtn' + (S.pl.want[p.id] ? ' on' : '') + '" id="lWant" aria-label="Da vedere">' + ICONS.star + '</button><button class="ibtn' + (S.pl.done[p.id] ? ' ok' : '') + '" id="lDone" aria-label="Fatto">' + ICONS.check + '</button>') + '</div>' +
     (p.d ? '<p>' + escq(p.d) + '</p>' : '') + (chips ? '<div class="chips">' + chips + '</div>' : '') +

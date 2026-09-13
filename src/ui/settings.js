@@ -36,5 +36,5 @@ export function drawSettings() {
     row('sMus', ICONS.music, 'Rumba catalana', [null, 'Parte al primo tocco sullo schermo'], 'swMus') + '</div>' +
     '<div class="about">BarceTrip · 15–20 settembre 2026</div>' +
     '<details class="crediti"><summary>Foto dei luoghi: Wikimedia Commons, ' + CREDITI.length + ' immagini con licenza libera</summary><ul>' +
-    CREDITI.map(c => { const p = PLACES.find(x => x.id === c.id); return '<li><b>' + (p ? p.n : c.id) + '</b> · ' + c.a + ' · ' + c.l + '</li>'; }).join('') + '</ul></details>';
+    CREDITI.map(c => { const p = PLACES.find(x => x.id === c.id); return '<li><b>' + (p ? p.n : c.id) + '</b>' + (c.z ? ' (' + c.z + ')' : '') + ' · ' + c.a + ' · ' + c.l + '</li>'; }).join('') + '</ul></details>';
 }

@@ -1,8 +1,9 @@
 /* Foto dei luoghi: una per scheda, da Wikimedia Commons, ridotte a 440 px e usate come sfondo sfumato.
-   Le licenze richiedono di citare l'autore: l'elenco è nelle Impostazioni. Generato da scarica.py. */
-export const FOTO = new Set(["alcalde", "arenas", "barceloneta", "batllo", "blai", "boqueria", "born", "bunkers", "caixaforum", "campnou", "castell", "catalunya", "catedral", "ciutadella", "concordia", "espind", "felipneri", "fontmagica", "gracia", "guell", "jmiro", "macba", "mies", "miro", "mnac", "msants", "palau", "palauguell", "pedralbes", "pedrera", "picasso", "plsants", "poble", "reial", "sagrada", "santantoni", "santpau", "santpaucamp", "stcaterina", "tibidabo", "vicens"]);
+   Per i posti personali è la foto della via o del quartiere. Le licenze richiedono di citare l'autore: elenco nelle Impostazioni. Generato da scarica.py. */
+export const FOTO = new Set(["alcalde", "apricots", "arenas", "barceloneta", "batllo", "blai", "boqueria", "born", "bunkers", "caixaforum", "campnou", "castell", "catalunya", "catedral", "ciutadella", "concordia", "espind", "felina", "felipneri", "fontmagica", "gracia", "guell", "imma", "inet", "jmiro", "locker", "macba", "maison", "mies", "miro", "mnac", "msants", "oxyzen", "palau", "palauguell", "pedralbes", "pedrera", "picasso", "plsants", "poble", "reial", "sagrada", "santantoni", "santpau", "santpaucamp", "sospedra", "stcaterina", "suite", "tibidabo", "vicens"]);
 export const CREDITI = [
   { id: "alcalde", f: "Mirador_Alcalde01.JPG", a: "Canaan", l: "CC BY-SA 3.0" },
+  { id: "apricots", f: "Exterior_Camp_nou.jpg", a: "autore non indicato", l: "CC BY-SA 3.0", z: "Les Corts" },
   { id: "arenas", f: "Barcelona- Arenes de Barcelona, obra d'August Font i Carreras (1900). Plaça de braus remodelada i transformada en centre comercial segons projecte de Richard Rogers (2011) (9647660744).jpg", a: "Catalan Art &amp; Architecture Gallery (Josep Bracons) from ", l: "CC BY-SA 2.0" },
   { id: "barceloneta", f: "Barcelona_(16877599244).jpg", a: "Kuba Bożanowski from Warsaw, Poland", l: "CC BY 2.0" },
   { id: "batllo", f: "05_Casa_Batlló.jpg", a: "Enfo", l: "CC BY-SA 3.0" },
@@ -18,16 +19,22 @@ export const CREDITI = [
   { id: "ciutadella", f: "Gran_Cascada1.JPG", a: "Canaan", l: "CC BY-SA 3.0" },
   { id: "concordia", f: "Place_de_la_Concorde_from_the_Eiffel_Tower,_Paris_April_2011.jpg", a: "Cristian Bortes from Cluj-Napoca, Romania", l: "CC BY 2.0" },
   { id: "espind", f: "Barcelona_-_Parc_de_l'Espanya_Industrial_1.jpg", a: "Zarateman", l: "CC0" },
+  { id: "felina", f: "Guardià_de_les_Corts.png", a: "Panarra", l: "CC BY-SA 4.0", z: "Les Corts (barri)" },
   { id: "felipneri", f: "Plaça_Sant_Felip_Neri.jpg", a: "Manel Zaera", l: "CC BY-SA 2.0" },
   { id: "fontmagica", f: "La_font_de_Montjuïc_amb_Collserola_al_fons.jpg", a: "jordi domènech", l: "CC BY-SA 3.0" },
   { id: "gracia", f: "PlaçaRiusiTaulet-ViladeGracia-Barcelona-Catalunya.jpg", a: "puigalder", l: "CC BY-SA 3.0" },
   { id: "guell", f: "Güell_BCN_edited.jpg", a: "Canaan", l: "CC BY-SA 4.0" },
+  { id: "imma", f: "Exterior_Camp_nou.jpg", a: "autore non indicato", l: "CC BY-SA 3.0", z: "Les Corts" },
+  { id: "inet", f: "Plaça_d'Espanya_(Barcelona)_03.jpg", a: "Nicholas Gemini", l: "CC BY-SA 4.0", z: "Plaça d'Espanya (Barcelona)" },
   { id: "jmiro", f: "ES-BCN-parc-miro.jpg", a: "Balou46", l: "CC BY-SA 3.0" },
+  { id: "locker", f: "Fachada_estación_de_Sants.jpg", a: "Baxtiyor", l: "CC BY 3.0", z: "Estació de Barcelona-Sants" },
   { id: "macba", f: "Barcelona_-_Museu_d'Art_Contemporani_de_Barcelona_(MACBA).jpg", a: "Zarateman", l: "CC0" },
+  { id: "maison", f: "Via_Barcelona_Casa_Milà.JPG", a: "Andrew", l: "CC BY-SA 3.0", z: "Passeig de Gràcia" },
   { id: "mies", f: "The_Barcelona_Pavilion,_Barcelona,_2010.jpg", a: "Ashley Pomeroy at English Wikipedia", l: "CC BY 3.0" },
   { id: "miro", f: "Fundació_Miró.JPG", a: "Canaan", l: "CC BY-SA 4.0" },
   { id: "mnac", f: "WLM14ES_-_Palau_Nacional_i_seu_del_MNAC_de_Barcelona_-_MARIA_ROSA_FERRE.jpg", a: "MARIA ROSA FERRE ✿ from Vilafranca del penedes, Catalunya", l: "CC BY-SA 2.0" },
   { id: "msants", f: "Mercat_de_Sants_(Barcelona).jpg", a: "Martinge636", l: "CC BY-SA 4.0" },
+  { id: "oxyzen", f: "GranVia_Rambla.JPG", a: "No machine-readable author provided. 1997 assumed (based on ", l: "CC BY-SA 3.0", z: "Gran Via de les Corts Catalanes" },
   { id: "palau", f: "22_11_01_Palau_DSCF2611_52502512616_cc1e7db845_k.jpg", a: "Ralf Roletschek", l: "GFDL 1.2" },
   { id: "palauguell", f: "Palau_Güell_(Barcelona)_-_3.jpg", a: "( Tomàs )", l: "CC BY-SA 2.0" },
   { id: "pedralbes", f: "090_Monestir_de_Santa_Maria_de_Pedralbes_(Barcelona),_galeria_nord_del_claustre.jpg", a: "Enric", l: "CC BY-SA 4.0" },
@@ -40,7 +47,9 @@ export const CREDITI = [
   { id: "santantoni", f: "Mercat_de_Sant_Antoni_-_tancant.jpg", a: "Pere López", l: "CC BY-SA 3.0" },
   { id: "santpau", f: "Νοσοκομείο_Σαντ_Πάου_3421.jpg", a: "C messier", l: "CC BY-SA 4.0" },
   { id: "santpaucamp", f: "Sant_Pau_del_Camp_-_Interior.JPG", a: "Josep Renalias", l: "CC BY-SA 3.0" },
+  { id: "sospedra", f: "Barcelona.Edificios.Sants.jpg", a: "Year of the dragon", l: "CC BY-SA 3.0", z: "Carrer de Sants" },
   { id: "stcaterina", f: "Façana_Santa_Caterina.jpg", a: "Albert Prat", l: "CC BY-SA 4.0" },
+  { id: "suite", f: "Fachada_estación_de_Sants.jpg", a: "Baxtiyor", l: "CC BY 3.0", z: "Estació de Barcelona-Sants" },
   { id: "tibidabo", f: "El_Tibidabo,_l'observatori_Fabra_i_la_punxa_d'una_torre_veneciana.jpg", a: "jordi domènech", l: "CC BY-SA 3.0" },
   { id: "vicens", f: "Casa_Vicens_2017_int_002.jpg", a: "Pol Viladoms", l: "CC BY-SA 4.0" },
 ];
