@@ -507,3 +507,18 @@ svg{display:block}
 #tabs button.bump .ic{animation:bump .4s cubic-bezier(.3,1.6,.4,1)}
 @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(-8deg)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.cele .mover,.cele .puff,.cele .rays,.cele .trail,.cele .lane,.cele .glow{display:none}.cele .stamp,.cele .ban{animation-duration:.01s;opacity:1}.tile.pop,.hero.pulse,#tabs button.bump .ic,.route i.now.pulse{animation:none}}
+
+/* ============ Togliere e rinominare ============ */
+.tile{position:relative;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.tile .tx{position:absolute;right:7px;top:7px;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--coral);display:grid;place-items:center;opacity:0;transform:scale(0);pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.tile .tx .ic{width:17px;height:17px}
+.tile.armed{animation:wiggle .5s ease-in-out infinite;box-shadow:0 0 0 3px #fff,var(--shadow)}
+.tile.armed .ti{opacity:0}
+.tile.armed .tx{opacity:1;transform:scale(1);pointer-events:auto;animation:popin .35s cubic-bezier(.3,1.7,.4,1)}
+@keyframes popin{0%{transform:scale(0) rotate(-90deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes wiggle{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+.bye{animation:bye .5s cubic-bezier(.55,0,.85,.35) forwards!important;pointer-events:none}
+@keyframes bye{0%{transform:scale(1) rotate(0);opacity:1}25%{transform:scale(1.08) rotate(-5deg);opacity:1}100%{transform:scale(.15) rotate(22deg) translateY(-60px);opacity:0}}
+.doc .dt b{cursor:text;border-bottom:1px dashed var(--line2)}
+.doc .dren{width:100%;min-width:0;font:inherit;font-weight:700;background:var(--card2);color:var(--ink);border:0;border-radius:8px;padding:4px 8px;outline:2px solid var(--teal)}
+@media (prefers-reduced-motion:reduce){.tile.armed{animation:none}.bye{animation-duration:.01s!important}}

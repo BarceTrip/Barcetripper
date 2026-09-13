@@ -84,6 +84,16 @@ export function bagDone(back) {
   layer().style.setProperty('--c', 'var(--lav)');
   confetti(140); fireworks(3);
 }
+/* elemento che sparisce: si accartoccia e vola via con uno sbuffo di particelle, poi chiama fn */
+export function vanish(el, fn) {
+  const r = el.getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2, { n: 22, cols: ['#fff', '#EC6B6B', '#B29BDD'], speed: 3.5, size: 5 });
+  buzz(12);
+  if (RM) { fn(); return; }
+  el.classList.add('bye'); el.style.pointerEvents = 'none';
+  let done = false; const go = () => { if (!done) { done = true; fn(); } };
+  el.addEventListener('animationend', go, { once: true }); setTimeout(go, 600);
+}
 /* moneta che cade nel salvadanaio: scoppio dorato dal punto toccato */
 export function coin(el) {
   const r = el && el.getBoundingClientRect();

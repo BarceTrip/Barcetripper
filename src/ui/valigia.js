@@ -5,7 +5,7 @@ import { ICONS } from '../icons.js';
 import { S, save } from '../state.js';
 import { $, $$, toast, header, emit, tileTxt } from './dom.js';
 import { sfx } from '../audio/sfx.js';
-import { tilePop, bagDone } from './celebra.js';
+import { tilePop, bagDone, vanish } from './celebra.js';
 
 let edit = false;   // modalità "togli oggetti"
 let addCat = 0;     // categoria scelta per l'oggetto nuovo
@@ -41,7 +41,30 @@ const BAG_SVG = '<svg viewBox="0 0 134 134" fill="none" stroke="currentColor" st
   '<path d="M28 116h54M28 112v8M82 112v8"/><path d="M108 34v72M104 34h8M104 106h8"/><path d="M22 28l14-12"/>' +
   '<g font-size="11" font-weight="800" fill="currentColor" stroke="none" text-anchor="middle"><text x="55" y="129">30 cm</text><text x="122" y="74">40</text><text x="22" y="13">20</text></g></svg>';
 
-const tile = (x, ok) => '<button class="tile' + (ok ? ' ok' : '') + (edit ? ' rm' : '') + '" data-id="' + x.id + '"><span class="ti">' + (edit ? ICONS.x : ICONS.check) + '</span><span class="tt">' + tileTxt(x.t) + '</span></button>';
+const tile = (x, ok) => '<button class="tile' + (ok ? ' ok' : '') + (edit ? ' rm' : '') + '" data-id="' + x.id + '"><span class="ti">' + (edit ? ICONS.x : ICONS.check) + '</span><span class="tx" aria-label="Elimina">' + ICONS.x + '</span><span class="tt">' + tileTxt(x.t) + '</span></button>';
+
+/* togliere un oggetto (da qualsiasi lista): sparisce con l'animazione, poi si può annullare dal toast */
+function removeItem(id, items, el) {
+  const it = items.find(x => x.id === id), wasChecked = !!S.bag.checks[id];
+  const done = () => {
+    if (id[0] === 'u') S.bag.custom = S.bag.custom.filter(x => x.id !== id); else if (!S.bag.hidden.includes(id)) S.bag.hidden.push(id);
+    delete S.bag.checks[id]; save(); drawValigia();
+    toast('Tolto: ' + (it ? it.t : ''), { label: 'Annulla', fn: () => { if (id[0] === 'u') S.bag.custom.push(it); else S.bag.hidden = S.bag.hidden.filter(x => x !== id); if (wasChecked) S.bag.checks[id] = true; save(); sfx('check'); drawValigia(); } });
+  };
+  if (el) vanish(el, done); else done();
+}
+/* pressione lunga su una tessera: compare la crocetta; un tocco altrove la toglie */
+let armed = null, armT = 0, armedNow = false;
+function disarm() { if (armed) { armed.classList.remove('armed'); armed = null; } }
+function armTile(b) { disarm(); armed = b; b.classList.add('armed'); armedNow = true; setTimeout(() => { armedNow = false; }, 700); sfx('tick'); try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {} }
+function bindLongPress(b) {
+  const start = () => { clearTimeout(armT); armT = setTimeout(() => armTile(b), 450); };
+  const stop = () => clearTimeout(armT);
+  b.addEventListener('touchstart', start, { passive: true }); b.addEventListener('touchend', stop); b.addEventListener('touchmove', stop, { passive: true }); b.addEventListener('touchcancel', stop);
+  b.addEventListener('mousedown', start); b.addEventListener('mouseup', stop); b.addEventListener('mouseleave', stop);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
+document.addEventListener('click', e => { if (armed && !e.target.closest('.tile.armed')) disarm(); }, true);
 
 /* cambio andata/ritorno: le spunte si azzerano, gli oggetti (anche quelli aggiunti) restano */
 function switchMode(mode) {
@@ -97,6 +120,7 @@ export function drawValigia() {
   const inBag = dn.length && !edit ? '<div class="sec done"><div class="sh"><span class="eyebrow">In valigia</span><small>tocca per tirare fuori</small></div><div class="grid">' + dn.map(x => tile(x, true)).join('') + '</div></div>' : '';
 
   const chip = '<button class="chipbtn' + (edit ? ' on' : '') + '" id="bgEdit">' + (edit ? 'Fine' : 'Togli oggetti') + '</button>';
+  armed = null;
   $('#pValigia').innerHTML = header((back ? 'Ritorno' : 'Andata') + ' · ' + tot + ' oggetti', 'Valigia', { back: 'bBagBack', extra: chip }) + hero + limit + cats + restore + add + inBag +
     '<div class="about">' + (edit ? 'Tocca un oggetto per toglierlo dall\'elenco' : 'Spunte e oggetti restano salvati sul telefono') + '</div>';
 
@@ -111,13 +135,14 @@ export function drawValigia() {
     S.bag.custom.push({ id: 'u' + Date.now(), t, c: addCat }); save(); sfx('check'); toast('Aggiunto: ' + t); drawValigia();
   };
   $('#bgAdd').onclick = addItem; $('#bgTxt').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
-  $$('#pValigia .tile').forEach(b => b.onclick = () => {
+  $$('#pValigia .tile').forEach(b => { bindLongPress(b); b.onclick = e => {
     const id = b.dataset.id;
-    if (edit) {
-      const it = items.find(x => x.id === id);
-      if (id[0] === 'u') S.bag.custom = S.bag.custom.filter(x => x.id !== id); else S.bag.hidden.push(id);
-      delete S.bag.checks[id]; save(); sfx('uncheck'); toast('Tolto: ' + (it ? it.t : '')); drawValigia(); return;
+    if (b.classList.contains('armed')) {
+      if (armedNow) { armedNow = false; return; }          // il rilascio della pressione lunga non conta
+      if (e.target.closest('.tx')) { sfx('whoosh'); removeItem(id, items, b); } else disarm();
+      return;
     }
+    if (edit) { sfx('whoosh'); removeItem(id, items, b); return; }
     if (S.bag.checks[id]) delete S.bag.checks[id]; else S.bag.checks[id] = true;
     save();
     const ok = !!S.bag.checks[id], all = ok && !bagCount().todo;
@@ -125,5 +150,5 @@ export function drawValigia() {
     drawValigia();
     tilePop($('#pValigia .tile[data-id="' + id + '"]'), ok);
     if (all) setTimeout(() => bagDone(isBack()), 200);
-  });
+  }; });
 }

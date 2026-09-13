@@ -5,6 +5,7 @@
 import { ICONS } from '../icons.js';
 import { $, $$, toast, header, emit } from './dom.js';
 import { sfx } from '../audio/sfx.js';
+import { vanish } from './celebra.js';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 const DB = 'barcetrip', STORE = 'docs';
@@ -87,7 +88,7 @@ export async function drawDocumenti() {
     '<button class="ibtn" data-open aria-label="Apri">' + ICONS.big + '</button><button class="ibtn" data-share aria-label="Condividi">' + ICONS.share + '</button><button class="ibtn" data-del aria-label="Elimina">' + ICONS.x + '</button></div>').join('') :
     '<button class="empty" id="dEmpty"><span class="ei">' + ICONS.plus + '</span><b>Aggiungi il primo documento</b><span>PDF o foto dal telefono: biglietto della Domus Aurea, verbale 104 in versione omissis, carte d\'imbarco, conferme degli hotel.</span></button>';
   $('#pDocumenti').innerHTML = header(docs.length ? docs.length + (docs.length === 1 ? ' documento' : ' documenti') : 'Solo sul telefono', 'Documenti', { back: 'bDocBack', extra: add }) +
-    '<div class="card docinfo"><b>Restano nel telefono.</b><span>Non passano da internet e si aprono anche senza rete. Per averli sempre, tieni l\'app sulla schermata Home. Tocca il nome per rinominare; nel visualizzatore, doppio tocco o + e − per ingrandire.</span></div>' +
+    '<div class="card docinfo"><b>Restano nel telefono.</b><span>Non passano da internet e si aprono anche senza rete. Per averli sempre, tieni l\'app sulla schermata Home. Tocca il nome per cambiarlo; nel visualizzatore, doppio tocco o + e − per ingrandire.</span></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">Da avere</span></div><div class="chips"><span class="chip">Biglietto Domus Aurea</span><span class="chip">Verbale 104 (omissis)</span><span class="chip">Carte d\'imbarco</span><span class="chip">Conferme hotel</span><span class="chip">Documento d\'identità</span></div></div>' +
     '<div class="sec"><div class="sh"><span class="eyebrow">I tuoi file</span></div>' + list + '</div>';
 
@@ -112,7 +113,24 @@ export async function drawDocumenti() {
     const d = docs.find(x => x.id === el.dataset.id);
     el.querySelector('[data-open]').onclick = () => { sfx('tick'); view(d); };
     el.querySelector('[data-share]').onclick = () => { sfx('tick'); share(d); };
-    el.querySelector('[data-del]').onclick = async () => { if (!confirm('Elimino "' + d.name + '" dal telefono?')) return; await del(d.id); sfx('uncheck'); drawDocumenti(); };
-    el.querySelector('.dt b').onclick = async () => { const n = prompt('Nome del documento', d.name); if (n && n.trim() && n.trim() !== d.name) { d.name = n.trim(); await put(d); drawDocumenti(); } };
+    /* elimina subito, con il tasto Annulla nel toast: le finestre di conferma del browser non compaiono nell'app installata su iPhone */
+    el.querySelector('[data-del]').onclick = () => { sfx('whoosh'); vanish(el, async () => { await del(d.id); drawDocumenti(); toast('Eliminato: ' + d.name, { label: 'Annulla', fn: async () => { await put(d); sfx('check'); drawDocumenti(); } }); }); };
+    /* rinomina in linea: tocca il nome, scrivi, Invio o tocca fuori per salvare, Esc per lasciar perdere */
+    const nm = el.querySelector('.dt b');
+    nm.onclick = () => {
+      if (el.querySelector('.dren')) return;
+      const inp = document.createElement('input'); inp.className = 'dren'; inp.type = 'text'; inp.maxLength = 60; inp.value = d.name; inp.setAttribute('aria-label', 'Nome del documento'); inp.autocomplete = 'off'; inp.enterKeyHint = 'done';
+      nm.replaceWith(inp); inp.focus();
+      const dot = d.name.lastIndexOf('.'); try { inp.setSelectionRange(0, dot > 0 ? dot : d.name.length); } catch (e) {}
+      let closed = false;
+      const finish = async ok => {
+        if (closed) return; closed = true;
+        const n = inp.value.trim();
+        if (ok && n && n !== d.name) { d.name = n; await put(d); sfx('check'); toast('Rinominato'); }
+        drawDocumenti();
+      };
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } else if (e.key === 'Escape') finish(false); });
+      inp.addEventListener('blur', () => finish(true));
+    };
   });
 }
