@@ -25,7 +25,6 @@ const row = (id, ico, t, sub, sw) => '<button class="srow" id="' + id + '">' + i
 /* Disegnata una volta sola: notify.js e main.js si agganciano agli id. */
 export function drawSettings() {
   $('#pSettings').innerHTML = header('Preferenze', 'Impostazioni', { back: 'bSetBack' }) +
-    row('sNow', ICONS.clock, "Vai all'ora attuale", [null, 'Salta alla tappa giusta per adesso']) +
     row('sBag', ICONS.bag, 'Valigia', [null, 'Cosa mettere in borsa, andata e ritorno']) +
     row('sDocs', ICONS.doc, 'Documenti', [null, 'Biglietti e verbali, salvati solo sul telefono']) +
     row('sNotif', ICONS.bell, 'Avvisi 30 minuti prima', ['notifSub', 'Non attivi'], 'swNotif') +

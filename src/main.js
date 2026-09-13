@@ -55,6 +55,12 @@ $('#tabs').innerHTML = TABS.map(t => '<button role="tab" data-t="' + t.id + '"' 
 $$('#tabs button').forEach(b => b.onclick = () => { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); if (S.tab !== b.dataset.t) { sfx('tick'); show(b.dataset.t); } else window.scrollTo({ top: 0, behavior: 'smooth' }); });
 /* ingranaggio in ogni intestazione, delegato perché le pagine si ridisegnano */
 document.addEventListener('click', e => { if (e.target.closest('.gear')) { sfx('tick'); show('settings'); } });
+/* orologio accanto all'ingranaggio: porta alla tappa giusta per adesso */
+function vaiAdesso() {
+  const k = nowIndex(); sfx('tick');
+  if (k < 0) { toast('Il viaggio non è ancora iniziato'); goto(0, -1); } else goto(k, k >= S.i ? 1 : -1);
+}
+document.addEventListener('click', e => { if (e.target.closest('.ibtn.now')) vaiAdesso(); });
 
 /* i pannelli a tutto schermo non devono sopravvivere a un cambio di pagina */
 function closeOverlays() {
@@ -101,10 +107,6 @@ document.addEventListener('dblclick', e => e.preventDefault(), { passive: false 
 /* ---- impostazioni ---- */
 drawSettings();
 $('#bSetBack').onclick = () => { sfx('back'); show(prevTab); };
-$('#sNow').onclick = () => {
-  const k = nowIndex(); sfx('tick');
-  if (k < 0) { toast('Il viaggio non è ancora iniziato'); goto(0, -1); } else goto(k, k >= S.i ? 1 : -1);
-};
 $('#sBag').onclick = () => { sfx('tick'); show('valigia'); };
 $('#sDocs').onclick = () => { sfx('tick'); show('documenti'); };
 $('#sNotif').onclick = notifAsk;

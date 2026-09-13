@@ -29,6 +29,6 @@ export function header(eyebrow, title, opts = {}) {
     (opts.back ? '<button class="ibtn" id="' + opts.back + '" aria-label="Indietro">' + ICONS.chevL + '</button>' : '') +
     '<div class="pt"><div class="eyebrow">' + eyebrow + '</div><h1' + (opts.coral ? ' class="coral"' : '') + '>' + title + '</h1></div>' +
     (opts.extra || '') +
-    (opts.gear ? '<button class="ibtn gear" aria-label="Impostazioni">' + ICONS.gear + '</button>' : '') +
+    (opts.gear ? '<button class="ibtn now" aria-label="Vai all\'ora attuale" title="Vai all\'ora attuale">' + ICONS.clock + '</button><button class="ibtn gear" aria-label="Impostazioni">' + ICONS.gear + '</button>' : '') +
     '</header>';
 }

@@ -55,7 +55,7 @@ const tile = (txt, k, ok) => '<button class="tile' + (ok ? ' ok' : '') + '" data
 export function drawOggi(dir) {
   const s = STEPS[S.i], last = S.i === STEPS.length - 1;
   const ni = nowIndex();
-  const nowBtn = ni >= 0 && ni !== S.i ? '<button class="nowchip" id="bNow">' + ICONS.clock + 'Adesso</button>' : '';
+  const nowBtn = '';   // l'orologio nell'intestazione (dom.js) sostituisce il vecchio chip "Adesso"
 
   /* i chip scorrono in un nastro lento e continuo se non entrano nella tessera (vedi marquee) */
   const chips = s.facts ? '<div class="mq" id="mq"><div class="mq-track" id="mqTrack"><span class="mq-set">' + s.facts.map(f => {
