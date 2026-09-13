@@ -7,8 +7,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Barcellona 15-20 settembre',
-        short_name: 'Barcellona',
+        name: 'BarceTrip',
+        short_name: 'BarceTrip',
         description: 'Itinerario, valigia, spese, luoghi ed emergenze del viaggio a Barcellona.',
         lang: 'it',
         start_url: '/',

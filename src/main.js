@@ -35,7 +35,7 @@ let prevTab = 'oggi', subFrom = 'oggi';
 function show(t, opts = {}) {
   if (!SUB[t]) prevTab = t;
   if (SUB[t] && t !== 'settings' && S.tab !== t) subFrom = TABS.some(x => x.id === S.tab) || S.tab === 'settings' ? S.tab : 'oggi';
-  S.tab = t;
+  S.tab = t; document.body.dataset.page = t;   // ogni pagina ha la sua trama di sfondo (vedi styles.css)
   $$('.page').forEach(p => p.classList.remove('on'));
   $('#' + (SUB[t] || TABS.find(x => x.id === t).page)).classList.add('on');
   $$('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));

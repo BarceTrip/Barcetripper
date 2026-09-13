@@ -9,6 +9,7 @@
   --blue:#5B8DEF;
   --shadow:0 6px 18px rgba(0,0,0,.22);
   --line2:rgba(255,255,255,.18);
+  --pat:rgba(255,255,255,.055); --pat2:rgba(255,255,255,.028);   /* trame di sfondo delle pagine */
 }
 [data-theme=light]{
   --bg:#F4EFE8; --card:#FFFFFF; --card2:#EFE8DE; --line:rgba(38,51,58,.08);
@@ -18,6 +19,7 @@
   --blue:#4F7FE0;
   --shadow:0 6px 18px rgba(38,51,58,.10);
   --line2:rgba(38,51,58,.18);
+  --pat:rgba(38,51,58,.07); --pat2:rgba(38,51,58,.035);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html{-webkit-text-size-adjust:100%}
@@ -530,3 +532,14 @@ svg{display:block}
 [data-theme=light] .pdet.pfoto::before{opacity:.55}
 .pdet.pfoto .pdh b,.pdet.pfoto .pdh span{text-shadow:0 1px 2px rgba(0,0,0,.35)} [data-theme=light] .pdet.pfoto .pdh b,[data-theme=light] .pdet.pfoto .pdh span{text-shadow:0 1px 2px rgba(255,255,255,.7)}
 .crediti{margin-top:12px;font-size:12px;color:var(--ink3)} .crediti summary{cursor:pointer;font-weight:700} .crediti ul{margin:8px 0 0 16px;line-height:1.5} .crediti b{font-weight:700;color:var(--ink2)}
+
+/* ============ Trame di sfondo, una per pagina (body[data-page] impostato da main.js) ============ */
+body[data-page="oggi"]{background-image: repeating-linear-gradient(45deg, var(--pat) 0 1px, transparent 1px 16px); background-size: auto;}   /* oggi: righe diagonali sottili */
+body[data-page="percorso"]{background-image: radial-gradient(5px 0.8px at 50% 50%, var(--pat) 99%, transparent 100%); background-size: 16px 20px;}   /* percorso: linee tratteggiate (trattini orizzontali in righe) */
+body[data-page="spese"]{background-image: radial-gradient(circle at 50% 50%, var(--pat) 1px, transparent 1.6px); background-size: 14px 14px;}   /* spese: punti */
+body[data-page="luoghi"]{background-image: linear-gradient(90deg, var(--pat) 1px, transparent 1px), linear-gradient(0deg, var(--pat) 1px, transparent 1px); background-size: 24px 24px, 24px 24px;}   /* luoghi: griglia */
+body[data-page="sos"]{background-image: linear-gradient(135deg, transparent 10.7px, var(--pat) 10.7px 11.9px, transparent 11.9px), linear-gradient(45deg, transparent 22px, var(--pat) 22px 23.2px, transparent 23.2px); background-size: 32px 16px, 32px 16px;}   /* sos: chevron (zig-zag a linee sottili) */
+body[data-page="settings"]{background-image: linear-gradient(45deg, transparent 13.5px, var(--pat2) 13.5px 14.7px, transparent 14.7px), linear-gradient(135deg, transparent 13.5px, var(--pat2) 13.5px 14.7px, transparent 14.7px); background-size: 20px 20px, 20px 20px;}   /* settings: rombi (reticolo a losanghe, a metà intensità perché fitto) */
+body[data-page="valigia"]{background-image: radial-gradient(circle at 50% 100%, transparent 13px, var(--pat) 13px 14px, transparent 14px); background-size: 32px 16px;}   /* valigia: onde (file di archetti) */
+body[data-page="documenti"]{background-image: radial-gradient(circle at 50% 50%, transparent 4.5px, var(--pat) 4.5px 5.5px, transparent 5.5px); background-size: 28px 28px;}   /* documenti: cerchi (anellini radi) */
+body[data-page="salute"]{background-image: radial-gradient(4px 0.8px at 50% 50%, var(--pat) 99%, transparent 100%), radial-gradient(0.8px 4px at 50% 50%, var(--pat) 99%, transparent 100%); background-size: 22px 22px, 22px 22px;}   /* salute: incroci (crocette a più) */

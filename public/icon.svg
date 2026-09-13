@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="heart">
+      <path d="M256,412 C256,412 84,306 84,188 C84,134 128,98 180,98 C215,98 242,122 256,152 C270,122 297,98 332,98 C384,98 428,134 428,188 C428,306 256,412 256,412 Z"/>
+    </clipPath>
+  </defs>
+  <!-- sfondo pieno, nessun alone -->
+  <rect width="512" height="512" fill="#28353D"/>
+  <!-- cuore -->
+  <path d="M256,412 C256,412 84,306 84,188 C84,134 128,98 180,98 C215,98 242,122 256,152 C270,122 297,98 332,98 C384,98 428,134 428,188 C428,306 256,412 256,412 Z" fill="#E85555"/>
+  <!-- ombra bassa per profondità -->
+  <path d="M84,188 C84,250 152,336 256,392 C360,336 428,250 428,188 C428,306 256,412 256,412 C256,412 84,306 84,188 Z" fill="#CC4444" clip-path="url(#heart)"/>
+  <!-- spallacci: bordo nel colore dello sfondo, poi teal -->
+  <g clip-path="url(#heart)" fill="none" stroke-linecap="round">
+    <path d="M228,232 C216,184 206,140 190,96" stroke="#28353D" stroke-width="44"/>
+    <path d="M284,232 C296,184 306,140 322,96" stroke="#28353D" stroke-width="44"/>
+    <path d="M228,232 C216,184 206,140 190,96" stroke="#5F9C97" stroke-width="28"/>
+    <path d="M284,232 C296,184 306,140 322,96" stroke="#5F9C97" stroke-width="28"/>
+  </g>
+  <!-- maniglia -->
+  <path d="M242,192 C242,168 270,168 270,192" fill="none" stroke="#28353D" stroke-width="26" stroke-linecap="round"/>
+  <path d="M242,192 C242,168 270,168 270,192" fill="none" stroke="#5F9C97" stroke-width="12" stroke-linecap="round"/>
+  <!-- bordo pieno (8 px) attorno allo zaino -->
+  <path d="M213,182 H299 A44,44 0 0 1 343,226 V304 A68,68 0 0 1 275,372 H237 A68,68 0 0 1 169,304 V226 A44,44 0 0 1 213,182 Z" fill="#28353D"/>
+  <!-- zaino 158x174, angoli 36 sopra / 60 sotto -->
+  <path d="M213,190 H299 A36,36 0 0 1 335,226 V304 A60,60 0 0 1 275,364 H237 A60,60 0 0 1 177,304 V226 A36,36 0 0 1 213,190 Z" fill="#5F9C97"/>
+  <!-- patta -->
+  <path d="M177,244 H335 V226 A36,36 0 0 0 299,190 H213 A36,36 0 0 0 177,226 Z" fill="#457F7A"/>
+  <!-- tasca gialla centrata sul fronte -->
+  <rect x="220" y="272" width="72" height="56" rx="16" fill="#F2C94C"/>
+</svg>
