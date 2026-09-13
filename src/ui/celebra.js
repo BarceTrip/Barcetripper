@@ -45,7 +45,7 @@ export function celebrate(mode, last) {
   else if (mode === 'road') extra = '<i class="lane"></i><i class="lane l2"></i>';
   else if (mode === 'box') extra = '<i class="glow"></i>';
   const html = '<i class="flash"></i>' + extra + '<div class="mover">' + (ICONS[mode] || ICONS.sign) + '</div>' + stamp(pick(m.txt));
-  show(mode, html.replace(/--c/g, '--c'), 2100);
+  show(mode, html, 2100);
   layer().style.setProperty('--c', m.c);
   if (!RM) {
     setTimeout(() => burst(innerWidth / 2, innerHeight * .38, { n: 34, cols: m.cols, speed: 6, star: mode === 'free' || mode === 'stay' }), 260);
